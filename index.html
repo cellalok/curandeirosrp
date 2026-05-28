@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>☣ Sistema de Curandeiros</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+
+        <h1>☣ Sistema de Curandeiros</h1>
+
+        <p>Painel Médico Pós-Apocalipse</p>
+
+    </header>
+
+    <!-- LOGIN -->
+
+    <section class="login-card">
+
+        <h2>🔐 Login Seguro</h2>
+
+        <input
+        type="text"
+        id="idLogin"
+        placeholder="ID do Curandeiro">
+
+        <input
+        type="password"
+        id="senhaLogin"
+        placeholder="Senha">
+
+        <button onclick="entrarSistema()">
+            Entrar
+        </button>
+
+    </section>
+
+    <!-- PAINEL -->
+
+    <section id="painel" style="display:none;">
+
+        <!-- BATE PONTO -->
+
+        <div class="card">
+
+            <h2>⏱ Bate Ponto</h2>
+
+            <button
+            class="green"
+            onclick="iniciarExpediente()">
+
+            ▶ Entrada
+
+            </button>
+
+            <button
+            class="red"
+            onclick="finalizarExpediente()">
+
+            ■ Saída
+
+            </button>
+
+            <div id="status"></div>
+
+            <div class="timer" id="timer">
+                00:00:00
+            </div>
+
+        </div>
+
+        <!-- PRINTS -->
+
+        <div class="card">
+
+            <h2>📸 Prints dos Atendimentos</h2>
+
+            <input
+            type="file"
+            id="upload"
+            multiple
+            accept="image/*">
+
+            <p>CTRL + V para colar prints</p>
+
+            <div id="previewContainer"></div>
+
+        </div>
+
+        <!-- PDF -->
+
+        <div class="card">
+
+            <h2>📄 Relatório Semanal</h2>
+
+            <button
+            class="blue"
+            onclick="gerarPDFSemanal()">
+
+            Gerar PDF
+
+            </button>
+
+        </div>
+
+        <!-- ADMIN -->
+
+        <div
+        class="card"
+        id="adminPanel"
+        style="display:none;">
+
+            <h2>👑 Administração</h2>
+
+            <input
+            type="text"
+            id="novoNome"
+            placeholder="Nome">
+
+            <input
+            type="text"
+            id="novoID"
+            placeholder="ID">
+
+            <button
+            class="green"
+            onclick="adicionarCurandeiro()">
+
+            ➕ Adicionar Curandeiro
+
+            </button>
+
+        </div>
+
+        <!-- REALTIME -->
+
+        <div
+        class="card"
+        id="painelRealtime"
+        style="display:none;">
+
+            <h2>🛰 Painel Administrativo Realtime</h2>
+
+            <div id="listaRealtime"></div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
