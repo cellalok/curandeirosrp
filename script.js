@@ -27,7 +27,7 @@ let ativosOnlineCache = {};
 const gerarPDFAutomatico = true;
 
 const ADMINS_NOMES = [
-"Luna Serenight"
+"Luna Serenight",
 "Edu Mello"
 ];
 
