@@ -13,13 +13,14 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
+<!-- PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 </head>
 
@@ -28,23 +29,43 @@
 <div class="container">
 
 <header>
+
 <h1>☣ SISTEMA CURANDEIROS ☣</h1>
-<p>Painel Militar Pós-Apocalipse</p>
+
+<p>
+Painel Militar Pós-Apocalipse
+</p>
+
 </header>
+
+<!-- LOGIN -->
 
 <section class="login-card">
 
 <h2>🔐 Login</h2>
 
-<input type="text" id="idLogin" placeholder="ID">
+<input
+type="text"
+id="idLogin"
+placeholder="ID">
 
-<input type="password" id="senhaLogin" placeholder="Senha">
+<input
+type="password"
+id="senhaLogin"
+placeholder="Senha">
 
-<button onclick="entrarSistema()">Entrar</button>
+<button onclick="entrarSistema()">
+Entrar
+</button>
 
 </section>
 
-<div class="card" id="trocarSenhaCard" style="display:none;">
+<!-- TROCAR SENHA -->
+
+<div
+class="card"
+id="trocarSenhaCard"
+style="display:none;">
 
 <h2>🔐 Alterar Senha</h2>
 
@@ -52,13 +73,38 @@
 Primeiro acesso detectado. Cadastre uma nova senha para continuar.
 </p>
 
-<input type="password" id="novaSenha" placeholder="Nova senha">
+<input
+type="password"
+id="novaSenha"
+placeholder="Nova senha">
 
-<button class="blue" onclick="trocarSenha()">Salvar Nova Senha</button>
+<button
+class="blue"
+onclick="trocarSenha()">
+
+Salvar Nova Senha
+
+</button>
 
 </div>
 
-<section id="painel" style="display:none;">
+<!-- PAINEL -->
+
+<section
+id="painel"
+style="display:none;">
+
+<!-- BEM VINDO -->
+
+<div class="card">
+
+<h2>☣ Bem-vindo</h2>
+
+<div id="status"></div>
+
+</div>
+
+<!-- CONTROLE -->
 
 <div class="card">
 
@@ -66,25 +112,53 @@ Primeiro acesso detectado. Cadastre uma nova senha para continuar.
 
 <div class="buttons">
 
-<button class="green" onclick="iniciarExpediente()">▶ Entrada</button>
+<button
+class="green"
+onclick="iniciarExpediente()">
 
-<button class="red" onclick="finalizarExpediente()">■ Saída</button>
+▶ Entrada
 
-<button class="red" onclick="logout()">🚪 Sair</button>
+</button>
+
+<button
+class="red"
+onclick="finalizarExpediente()">
+
+■ Saída
+
+</button>
+
+<button
+class="red"
+onclick="logout()">
+
+🚪 Sair
+
+</button>
 
 </div>
 
-<div id="status"></div>
+<div
+class="timer"
+id="timer">
 
-<div class="timer" id="timer">00:00:00</div>
+00:00:00
 
 </div>
+
+</div>
+
+<!-- PRINTS -->
 
 <div class="card">
 
 <h2>📸 Prints</h2>
 
-<input type="file" id="upload" multiple accept="image/*">
+<input
+type="file"
+id="upload"
+multiple
+accept="image/*">
 
 <p class="info-text">
 CTRL + V para colar prints
@@ -92,9 +166,17 @@ CTRL + V para colar prints
 
 <div id="previewContainer"></div>
 
-<button class="red" onclick="limparPrints()">🗑 Limpar Prints</button>
+<button
+class="red"
+onclick="limparPrints()">
+
+🗑 Limpar Prints
+
+</button>
 
 </div>
+
+<!-- ONLINE -->
 
 <div class="card" id="onlinePanel">
 
@@ -108,33 +190,62 @@ Status atualizado automaticamente a cada 30 segundos.
 
 </div>
 
+<!-- RELATÓRIOS -->
+
 <div class="card">
 
 <h2>📄 Relatórios Premium</h2>
 
-<input type="date" id="dataRelatorio">
+<input
+type="date"
+id="dataRelatorio">
 
 <select id="membroRelatorio">
-<option value="">Meu relatório</option>
+
+<option value="">
+Meu relatório
+</option>
+
 </select>
 
-<button class="blue" onclick="gerarPDFDiario()">☣ Gerar PDF Premium</button>
+<button
+class="blue"
+onclick="gerarPDFDiario()">
+
+☣ Gerar PDF Premium
+
+</button>
 
 </div>
+
+<!-- HISTÓRICO -->
 
 <div class="card">
 
 <h2>📚 Histórico</h2>
 
-<input type="date" id="filtroHistorico">
+<input
+type="date"
+id="filtroHistorico">
 
-<button class="blue" onclick="filtrarHistorico()">🔎 Filtrar</button>
+<button
+class="blue"
+onclick="filtrarHistorico()">
+
+🔎 Filtrar
+
+</button>
 
 <div id="historicoLista"></div>
 
 </div>
 
-<div class="card" id="adminPanel" style="display:none;">
+<!-- ADMIN -->
+
+<div
+class="card"
+id="adminPanel"
+style="display:none;">
 
 <h2>👑 Administração</h2>
 
@@ -144,17 +255,47 @@ Status atualizado automaticamente a cada 30 segundos.
 
 <div class="admin-tabs">
 
-<button class="blue" onclick="mostrarAba('realtime')">🛰 Painel</button>
+<button
+class="blue"
+onclick="mostrarAba('realtime')">
 
-<button class="blue" onclick="mostrarAba('logs')">📋 Logs</button>
+🛰 Painel
 
-<button class="blue" onclick="mostrarAba('membros')">👥 Membros</button>
+</button>
 
-<button class="green" id="btnAbaGerador" onclick="mostrarAba('gerador')" style="display:none;">🔑 Gerador</button>
+<button
+class="blue"
+onclick="mostrarAba('logs')">
+
+📋 Logs
+
+</button>
+
+<button
+class="blue"
+onclick="mostrarAba('membros')">
+
+👥 Membros
+
+</button>
+
+<button
+class="green"
+id="btnAbaGerador"
+onclick="mostrarAba('gerador')"
+style="display:none;">
+
+🔑 Gerador
+
+</button>
 
 </div>
 
-<div class="admin-aba" id="abaRealtime">
+<!-- ABA REALTIME -->
+
+<div
+class="admin-aba"
+id="abaRealtime">
 
 <h2>🛰 Painel Administrativo</h2>
 
@@ -162,7 +303,12 @@ Status atualizado automaticamente a cada 30 segundos.
 
 </div>
 
-<div class="admin-aba" id="abaLogs" style="display:none;">
+<!-- ABA LOGS -->
+
+<div
+class="admin-aba"
+id="abaLogs"
+style="display:none;">
 
 <h2>📋 Logs</h2>
 
@@ -170,7 +316,12 @@ Status atualizado automaticamente a cada 30 segundos.
 
 </div>
 
-<div class="admin-aba" id="abaMembros" style="display:none;">
+<!-- ABA MEMBROS -->
+
+<div
+class="admin-aba"
+id="abaMembros"
+style="display:none;">
 
 <h2>👥 Membros</h2>
 
@@ -182,52 +333,91 @@ Status online/offline atualizado automaticamente a cada 30 segundos.
 
 </div>
 
-<div class="admin-aba" id="abaGerador" style="display:none;">
+<!-- ABA GERADOR -->
+
+<div
+class="admin-aba"
+id="abaGerador"
+style="display:none;">
 
 <h2>🔑 Gerador de Hash Firebase</h2>
 
 <p class="info-text">
-Use esta ferramenta apenas para gerar o hash da senha provisória. Depois cadastre o membro manualmente no Firebase Console.
+Use esta ferramenta apenas para gerar o hash da senha provisória.
 </p>
 
-<input type="text" id="firebaseNome" placeholder="Nome">
+<input
+type="text"
+id="firebaseNome"
+placeholder="Nome">
 
-<input type="text" id="firebaseID" placeholder="ID">
+<input
+type="text"
+id="firebaseID"
+placeholder="ID">
 
 <select id="firebaseCargo">
-<option value="curandeiro">Aprendiz Curandeiro</option>
-<option value="chefe">Mestre Curandeiro</option>
+
+<option value="curandeiro">
+Aprendiz Curandeiro
+</option>
+
+<option value="chefe">
+Mestre Curandeiro
+</option>
+
 </select>
 
-<input type="text" id="firebaseSenha" placeholder="Senha provisória">
+<input
+type="text"
+id="firebaseSenha"
+placeholder="Senha provisória">
 
-<button class="green" onclick="gerarUsuarioFirebase()">⚡ Gerar Hash</button>
+<button
+class="green"
+onclick="gerarUsuarioFirebase()">
+
+⚡ Gerar Hash
+
+</button>
 
 <textarea
 id="firebaseResultado"
 rows="12"
 readonly
-placeholder="O JSON para cadastrar no Firebase aparecerá aqui..."></textarea>
+placeholder="O JSON aparecerá aqui...">
+</textarea>
 
 <hr>
 
 <h2>🔁 Resetar Senha Provisória</h2>
 
 <p class="info-text">
-Selecione um membro para gerar uma nova senha provisória. O membro deverá alterar a senha no próximo login.
+Selecione um membro para gerar uma nova senha provisória.
 </p>
 
 <select id="resetUsuario">
-<option value="">Selecione um membro</option>
+
+<option value="">
+Selecione um membro
+</option>
+
 </select>
 
-<button class="red" onclick="resetarSenhaUsuario()">🔁 Gerar Nova Senha</button>
+<button
+class="red"
+onclick="resetarSenhaUsuario()">
+
+🔁 Gerar Nova Senha
+
+</button>
 
 <textarea
 id="resultadoResetSenha"
 rows="8"
 readonly
-placeholder="A nova senha provisória aparecerá aqui..."></textarea>
+placeholder="A nova senha aparecerá aqui...">
+</textarea>
 
 </div>
 
@@ -236,6 +426,8 @@ placeholder="A nova senha provisória aparecerá aqui..."></textarea>
 </section>
 
 </div>
+
+<!-- TEMPLATE PDF -->
 
 <div
 id="pdfTemplate"
