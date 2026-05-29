@@ -63,6 +63,17 @@ function usuarioEhAdmin(){
 return usuarioAtual && usuarioAtual.nome === ADMIN_NOME;
 }
 
+function gerarSenhaProvisoria(){
+const caracteres = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#$%";
+let senha = "";
+
+for(let i = 0; i < 8; i++){
+senha += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+}
+
+return senha;
+}
+
 // =========================
 // SESSÃO
 // =========================
@@ -234,6 +245,7 @@ iniciarRealtimePainel();
 carregarLogs();
 carregarMembros();
 carregarSelectMembros();
+carregarSelectResetSenha();
 mostrarAba("realtime");
 }
 }
@@ -273,6 +285,7 @@ renderizarMembros();
 
 if(nome === "gerador" && usuarioEhAdmin()){
 document.getElementById("abaGerador").style.display = "block";
+carregarSelectResetSenha();
 }
 }
 
@@ -354,6 +367,85 @@ criadoEm:Date.now()
 
 document.getElementById("firebaseResultado").value =
 JSON.stringify(json,null,2);
+}
+
+// =========================
+// RESET SENHA PROVISÓRIA
+// =========================
+
+async function carregarSelectResetSenha(){
+if(!usuarioEhAdmin()) return;
+
+const select = document.getElementById("resetUsuario");
+
+if(!select) return;
+
+select.innerHTML = '<option value="">Selecione um membro</option>';
+
+const snapshot = await db.collection("usuarios").get();
+
+snapshot.forEach(doc=>{
+const membro = doc.data();
+
+const option = document.createElement("option");
+
+option.value = doc.id;
+option.innerText = `${membro.nome} (${membro.id})`;
+
+select.appendChild(option);
+});
+}
+
+async function resetarSenhaUsuario(){
+if(!usuarioEhAdmin()){
+alert("Apenas Luna Serenight pode resetar senhas.");
+return;
+}
+
+const docId = document.getElementById("resetUsuario").value;
+
+if(!docId){
+alert("Selecione um membro.");
+return;
+}
+
+try{
+const novaSenha = gerarSenhaProvisoria();
+const hash = await gerarHash(novaSenha);
+
+await db.collection("usuarios")
+.doc(docId)
+.update({
+senha:hash,
+primeiroLogin:true,
+senhaResetadaEm:Date.now()
+});
+
+const doc = await db.collection("usuarios")
+.doc(docId)
+.get();
+
+const membro = doc.data();
+
+document.getElementById("resultadoResetSenha").value =
+`Membro: ${membro.nome}
+
+ID: ${membro.id}
+
+Nova senha provisória:
+
+${novaSenha}
+
+Primeiro login obrigatório.`;
+
+registrarLog(`Senha resetada para ${membro.nome}`);
+
+alert("Senha provisória gerada com sucesso.");
+
+}catch(error){
+console.error(error);
+alert("Erro ao resetar senha. Verifique as regras do Firebase.");
+}
 }
 
 // =========================
