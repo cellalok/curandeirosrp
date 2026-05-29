@@ -1,18 +1,17 @@
-// FIREBASE CONFIG
-
 const firebaseConfig = {
 
-    apiKey: "AIzaSyDobXJ_knDYZpmPAoktRzEU8U3GGB6t3cI",
+apiKey: "SUA_API_KEY",
 
-    authDomain: "painel-curandeiros.firebaseapp.com",
+authDomain: "SEU_DOMINIO.firebaseapp.com",
 
-    projectId: "painel-curandeiros",
+projectId: "SEU_PROJECT_ID",
 
-    storageBucket: "painel-curandeiros.firebasestorage.app",
+storageBucket: "SEU_BUCKET.appspot.com",
 
-    messagingSenderId: "1069159942082",
+messagingSenderId: "SEU_ID",
 
-    appId: "1:1069159942082:web:d77a35c46d68849f2db85b"
+appId: "SEU_APP_ID"
+
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -31,234 +30,222 @@ let imagens = [];
 
 async function gerarHash(texto){
 
-    const encoder = new TextEncoder();
+const encoder = new TextEncoder();
 
-    const data = encoder.encode(texto);
+const data = encoder.encode(texto);
 
-    const hashBuffer =
-    await crypto.subtle.digest(
-        "SHA-256",
-        data
-    );
+const hashBuffer =
+await crypto.subtle.digest(
+"SHA-256",
+data
+);
 
-    const hashArray =
-    Array.from(
-        new Uint8Array(hashBuffer)
-    );
+const hashArray =
+Array.from(
+new Uint8Array(hashBuffer)
+);
 
-    return hashArray
-    .map(b =>
-        b.toString(16).padStart(2,"0")
-    )
-    .join("");
+return hashArray
+.map(b =>
+b.toString(16).padStart(2,"0")
+)
+.join("");
+
 }
 
 // LOGIN
 
 async function entrarSistema(){
 
-    const id =
-    document.getElementById("idLogin").value;
+const id =
+document.getElementById("idLogin").value;
 
-    const senha =
-    document.getElementById("senhaLogin").value;
+const senha =
+document.getElementById("senhaLogin").value;
 
-    const senhaHash =
-    await gerarHash(senha);
+const senhaHash =
+await gerarHash(senha);
 
-    const snapshot =
-    await db.collection("usuarios")
-    .where("id","==",id)
-    .where("senha","==",senhaHash)
-    .get();
+const snapshot =
+await db.collection("usuarios")
+.where("id","==",id)
+.where("senha","==",senhaHash)
+.get();
 
-    if(snapshot.empty){
+if(snapshot.empty){
 
-        alert("ID ou senha inválido");
+alert("ID ou senha inválido");
 
-        return;
-    }
+return;
 
-    usuarioAtual =
-    snapshot.docs[0].data();
+}
 
-    usuarioAtual.docId =
-    snapshot.docs[0].id;
+usuarioAtual =
+snapshot.docs[0].data();
 
-    document.querySelector(".login-card")
-    .style.display = "none";
+usuarioAtual.docId =
+snapshot.docs[0].id;
 
-    document.getElementById("painel")
-    .style.display = "block";
+document.querySelector(".login-card")
+.style.display = "none";
 
-    document.getElementById("status")
-    .innerHTML =
+document.getElementById("painel")
+.style.display = "block";
 
-    `☣ Bem-vindo(a),
-    ${usuarioAtual.nome}`;
+document.getElementById("status")
+.innerHTML =
 
-    // ONLINE
+`☣ Bem-vindo(a),
+${usuarioAtual.nome}`;
 
-    await db.collection("ativos")
-    .doc(usuarioAtual.id)
-    .set({
+await db.collection("ativos")
+.doc(usuarioAtual.id)
+.set({
 
-        nome:usuarioAtual.nome,
+nome:usuarioAtual.nome,
 
-        id:usuarioAtual.id,
+id:usuarioAtual.id,
 
-        cargo:usuarioAtual.cargo,
+cargo:usuarioAtual.cargo,
 
-        online:true,
+online:true
 
-        ultimoLogin:
-        new Date().toLocaleString()
-    });
+});
 
-    // PRIMEIRO LOGIN
+if(usuarioAtual.primeiroLogin){
 
-    if(usuarioAtual.primeiroLogin){
+document.getElementById(
+"trocarSenhaCard"
+).style.display = "block";
 
-        document.getElementById(
-        "trocarSenhaCard"
-        ).style.display = "block";
-    }
+}
 
-    // CHEFE
+if(usuarioAtual.cargo === "chefe"){
 
-    if(usuarioAtual.cargo === "chefe"){
+document.getElementById(
+"adminPanel"
+).style.display = "block";
 
-        document.getElementById(
-        "adminPanel"
-        ).style.display = "block";
+document.getElementById(
+"painelRealtime"
+).style.display = "block";
 
-        document.getElementById(
-        "painelRealtime"
-        ).style.display = "block";
+document.getElementById(
+"membrosPanel"
+).style.display = "block";
 
-        document.getElementById(
-        "membrosPanel"
-        ).style.display = "block";
+iniciarRealtimePainel();
 
-        iniciarRealtimePainel();
+carregarMembros();
 
-        carregarMembros();
-    }
+}
+
 }
 
 // TROCAR SENHA
 
 async function trocarSenha(){
 
-    const novaSenha =
-    document.getElementById("novaSenha")
-    .value;
+const novaSenha =
+document.getElementById("novaSenha")
+.value;
 
-    if(novaSenha.length < 4){
+const senhaHash =
+await gerarHash(novaSenha);
 
-        alert("Senha muito curta");
+await db.collection("usuarios")
+.doc(usuarioAtual.docId)
+.update({
 
-        return;
-    }
+senha:senhaHash,
 
-    const senhaHash =
-    await gerarHash(novaSenha);
+primeiroLogin:false
 
-    await db.collection("usuarios")
-    .doc(usuarioAtual.docId)
-    .update({
+});
 
-        senha:senhaHash,
+alert("Senha alterada");
 
-        primeiroLogin:false
-    });
+document.getElementById(
+"trocarSenhaCard"
+).style.display = "none";
 
-    alert("☣ Senha alterada");
-
-    document.getElementById(
-    "trocarSenhaCard"
-    ).style.display = "none";
 }
 
 // EXPEDIENTE
 
 async function iniciarExpediente(){
 
-    imagens = [];
+imagens = [];
 
-    atualizarPreview();
+atualizarPreview();
 
-    inicioExpediente = new Date();
+inicioExpediente = new Date();
 
-    intervalo =
-    setInterval(
-        atualizarTimer,
-        1000
-    );
+intervalo =
+setInterval(
+atualizarTimer,
+1000
+);
 
-    document.getElementById("status")
-    .innerHTML =
-
-    `🟢 Entrada:
-    ${inicioExpediente.toLocaleTimeString()}`;
 }
 
 function atualizarTimer(){
 
-    const agora = new Date();
+const agora = new Date();
 
-    const diff =
-    agora - inicioExpediente;
+const diff =
+agora - inicioExpediente;
 
-    const horas =
-    Math.floor(diff / 3600000);
+const horas =
+Math.floor(diff / 3600000);
 
-    const minutos =
-    Math.floor((diff % 3600000)/60000);
+const minutos =
+Math.floor((diff % 3600000)/60000);
 
-    const segundos =
-    Math.floor((diff % 60000)/1000);
+const segundos =
+Math.floor((diff % 60000)/1000);
 
-    document.getElementById("timer")
-    .innerText =
+document.getElementById("timer")
+.innerText =
 
-    `${String(horas).padStart(2,'0')}:${String(minutos).padStart(2,'0')}:${String(segundos).padStart(2,'0')}`;
+`${String(horas).padStart(2,'0')}:${String(minutos).padStart(2,'0')}:${String(segundos).padStart(2,'0')}`;
+
 }
 
 async function finalizarExpediente(){
 
-    clearInterval(intervalo);
+clearInterval(intervalo);
 
-    const agora = new Date();
+const agora = new Date();
 
-    await db.collection("registros")
-    .add({
+await db.collection("registros")
+.add({
 
-        nome:usuarioAtual.nome,
+nome:usuarioAtual.nome,
 
-        id:usuarioAtual.id,
+id:usuarioAtual.id,
 
-        cargo:usuarioAtual.cargo,
+entrada:
+inicioExpediente.toLocaleTimeString(),
 
-        entrada:
-        inicioExpediente.toLocaleTimeString(),
+saida:
+agora.toLocaleTimeString(),
 
-        saida:
-        agora.toLocaleTimeString(),
+total:
+document.getElementById("timer")
+.innerText,
 
-        total:
-        document.getElementById("timer")
-        .innerText,
+data:
+agora.toLocaleDateString(),
 
-        data:
-        agora.toLocaleDateString(),
+prints:imagens,
 
-        prints:imagens,
+timestamp:Date.now()
 
-        timestamp:Date.now()
-    });
+});
 
-    alert("☣ Expediente salvo");
+alert("Expediente salvo");
+
 }
 
 // PRINTS
@@ -267,423 +254,408 @@ document
 .getElementById("upload")
 .addEventListener("change",(e)=>{
 
-    for(const file of e.target.files){
+for(const file of e.target.files){
 
-        processarImagem(file);
-    }
+processarImagem(file);
+
+}
+
 });
 
 document.addEventListener("paste",(event)=>{
 
-    const items =
-    event.clipboardData.items;
+const items =
+event.clipboardData.items;
 
-    for(const item of items){
+for(const item of items){
 
-        if(item.type.indexOf("image") !== -1){
+if(item.type.indexOf("image") !== -1){
 
-            processarImagem(
-                item.getAsFile()
-            );
-        }
-    }
+processarImagem(
+item.getAsFile()
+);
+
+}
+
+}
+
 });
 
 function processarImagem(file){
 
-    const reader =
-    new FileReader();
+const reader =
+new FileReader();
 
-    reader.onload = function(e){
+reader.onload = function(e){
 
-        imagens.push(e.target.result);
+imagens.push(e.target.result);
 
-        atualizarPreview();
-    }
+atualizarPreview();
 
-    reader.readAsDataURL(file);
+}
+
+reader.readAsDataURL(file);
+
 }
 
 function atualizarPreview(){
 
-    const container =
-    document.getElementById("previewContainer");
+const container =
+document.getElementById("previewContainer");
 
-    container.innerHTML = "";
+container.innerHTML = "";
 
-    imagens.forEach((img,index)=>{
+imagens.forEach((img,index)=>{
 
-        const div =
-        document.createElement("div");
+const div =
+document.createElement("div");
 
-        div.classList.add("preview-box");
+div.classList.add("preview-box");
 
-        div.innerHTML = `
+div.innerHTML = `
 
-            <div class="preview-number">
-                #${index+1}
-            </div>
+<div class="preview-number">
+#${index+1}
+</div>
 
-            <img src="${img}">
+<img src="${img}">
 
-        `;
+`;
 
-        container.appendChild(div);
-    });
-}
+container.appendChild(div);
 
-// REALTIME
+});
 
-function iniciarRealtimePainel(){
-
-    db.collection("registros")
-
-    .orderBy("timestamp","desc")
-
-    .onSnapshot(snapshot=>{
-
-        const lista =
-        document.getElementById("listaRealtime");
-
-        lista.innerHTML = "";
-
-        snapshot.forEach(doc=>{
-
-            const item = doc.data();
-
-            const card =
-            document.createElement("div");
-
-            card.classList.add("realtime-card");
-
-            let imagensHTML = "";
-
-            if(item.prints){
-
-                item.prints.forEach((img)=>{
-
-                    imagensHTML += `
-
-                    <img
-                    src="${img}"
-                    onclick="abrirImagem('${img}')">
-
-                    `;
-                });
-            }
-
-            card.innerHTML = `
-
-                <div class="online-badge">
-
-                    🛰 REGISTRO
-
-                </div>
-
-                <h3>
-                    👤 ${item.nome}
-                </h3>
-
-                <p>
-                    🪪 ${item.id}
-                </p>
-
-                <p>
-                    ⏱ ${item.total}
-                </p>
-
-                <p>
-                    📅 ${item.data}
-                </p>
-
-                <div class="prints-grid">
-
-                    ${imagensHTML}
-
-                </div>
-
-            `;
-
-            lista.appendChild(card);
-        });
-    });
 }
 
 // MEMBROS
 
 function carregarMembros(){
 
-    db.collection("usuarios")
+db.collection("usuarios")
 
-    .onSnapshot(async snapshot=>{
+.onSnapshot(async snapshot=>{
 
-        const lista =
-        document.getElementById("listaMembros");
+const lista =
+document.getElementById("listaMembros");
 
-        lista.innerHTML = "";
+lista.innerHTML = "";
 
-        const ativosSnapshot =
-        await db.collection("ativos").get();
+const ativosSnapshot =
+await db.collection("ativos").get();
 
-        const ativos = [];
+const ativos = [];
 
-        ativosSnapshot.forEach(doc=>{
+ativosSnapshot.forEach(doc=>{
 
-            ativos.push(doc.data().id);
-        });
+ativos.push(doc.data().id);
 
-        snapshot.forEach(doc=>{
+});
 
-            const membro =
-            doc.data();
+snapshot.forEach(doc=>{
 
-            const card =
-            document.createElement("div");
+const membro =
+doc.data();
 
-            card.classList.add("membro-card");
+const online =
+ativos.includes(membro.id);
 
-            const online =
-            ativos.includes(membro.id);
+const card =
+document.createElement("div");
 
-            card.innerHTML = `
+card.classList.add("membro-card");
 
-                <div class="
-                membro-status
-                ${online ? "online":"offline"}
-                ">
+card.innerHTML = `
 
-                ${online ?
-                "🟢 ONLINE":
-                "🔴 OFFLINE"}
+<div class="${online ? 'online':'offline'}">
 
-                </div>
+${online ?
+'🟢 ONLINE':
+'🔴 OFFLINE'}
 
-                <h3>
-                    👤 ${membro.nome}
-                </h3>
+</div>
 
-                <p>
-                    🪪 ${membro.id}
-                </p>
+<h3>
+👤 ${membro.nome}
+</h3>
 
-                <p>
-                    🎖 ${membro.cargo}
-                </p>
+<p>
+🪪 ${membro.id}
+</p>
 
-                <div class="membro-actions">
+<p>
+🎖 ${membro.cargo}
+</p>
 
-                    <button
-                    class="promover"
-                    onclick="promoverMembro('${doc.id}')">
+<div class="membro-actions">
 
-                    👑 Promover
+<button
+class="promover"
+onclick="promoverMembro('${doc.id}')">
 
-                    </button>
+👑 Promover
 
-                    <button
-                    class="remover"
-                    onclick="removerMembro('${doc.id}')">
+</button>
 
-                    🗑 Remover
+<button
+class="remover"
+onclick="removerMembro('${doc.id}')">
 
-                    </button>
+🗑 Remover
 
-                </div>
+</button>
 
-            `;
+</div>
 
-            lista.appendChild(card);
-        });
-    });
+`;
+
+lista.appendChild(card);
+
+});
+
+});
+
 }
-
-// PROMOVER
 
 async function promoverMembro(docId){
 
-    await db.collection("usuarios")
-    .doc(docId)
-    .update({
+await db.collection("usuarios")
+.doc(docId)
+.update({
 
-        cargo:"chefe"
-    });
+cargo:"chefe"
 
-    alert("☣ Promovido");
+});
+
+alert("Promovido");
+
 }
-
-// REMOVER
 
 async function removerMembro(docId){
 
-    const confirmar =
-    confirm("Remover membro?");
+const confirmar =
+confirm("Remover membro?");
 
-    if(!confirmar) return;
+if(!confirmar) return;
 
-    await db.collection("usuarios")
-    .doc(docId)
-    .delete();
+await db.collection("usuarios")
+.doc(docId)
+.delete();
 
-    alert("☣ Removido");
+alert("Removido");
+
+}
+
+// REALTIME
+
+function iniciarRealtimePainel(){
+
+db.collection("registros")
+
+.orderBy("timestamp","desc")
+
+.onSnapshot(snapshot=>{
+
+const lista =
+document.getElementById("listaRealtime");
+
+lista.innerHTML = "";
+
+snapshot.forEach(doc=>{
+
+const item = doc.data();
+
+const card =
+document.createElement("div");
+
+card.classList.add("realtime-card");
+
+let imagensHTML = "";
+
+if(item.prints){
+
+item.prints.forEach((img)=>{
+
+imagensHTML += `
+
+<img
+src="${img}">
+
+`;
+
+});
+
+}
+
+card.innerHTML = `
+
+<h3>
+👤 ${item.nome}
+</h3>
+
+<p>
+⏱ ${item.total}
+</p>
+
+<p>
+📅 ${item.data}
+</p>
+
+<div class="prints-grid">
+
+${imagensHTML}
+
+</div>
+
+`;
+
+lista.appendChild(card);
+
+});
+
+});
+
 }
 
 // ADMIN
 
 async function adicionarCurandeiro(){
 
-    const nome =
-    document.getElementById("novoNome").value;
+const nome =
+document.getElementById("novoNome").value;
 
-    const id =
-    document.getElementById("novoID").value;
+const id =
+document.getElementById("novoID").value;
 
-    const senhaTemp =
-    Math.floor(
-        100000 + Math.random() * 900000
-    ).toString();
+const senhaTemp =
+Math.floor(
+100000 + Math.random() * 900000
+).toString();
 
-    const senhaHash =
-    await gerarHash(senhaTemp);
+const senhaHash =
+await gerarHash(senhaTemp);
 
-    await db.collection("usuarios")
-    .add({
+await db.collection("usuarios")
+.add({
 
-        nome,
+nome,
 
-        id,
+id,
 
-        senha:senhaHash,
+senha:senhaHash,
 
-        cargo:"curandeiro",
+cargo:"curandeiro",
 
-        primeiroLogin:true
-    });
+primeiroLogin:true
 
-    alert(
+});
 
-        `☣ Curandeiro criado
+alert(
+
+`☣ Curandeiro criado
 
 Senha provisória:
 ${senhaTemp}`
-    );
+
+);
+
 }
 
 // PDF
 
 async function gerarPDFSemanal(){
 
-    const container =
-    document.getElementById("pdfTemplate");
+const container =
+document.getElementById("pdfTemplate");
 
-    const printsDiv =
-    document.getElementById("pdfPrints");
+const printsDiv =
+document.getElementById("pdfPrints");
 
-    printsDiv.innerHTML = "";
+printsDiv.innerHTML = "";
 
-    const snapshot =
-    await db.collection("registros")
-    .where("id","==",usuarioAtual.id)
-    .get();
+const snapshot =
+await db.collection("registros")
+.where("id","==",usuarioAtual.id)
+.get();
 
-    let total = 0;
+snapshot.forEach(doc=>{
 
-    snapshot.forEach(doc=>{
+const item = doc.data();
 
-        const item = doc.data();
+if(item.prints){
 
-        total++;
+item.prints.forEach((img,index)=>{
 
-        if(item.prints){
+const div =
+document.createElement("div");
 
-            item.prints.forEach((img,index)=>{
+div.classList.add("pdf-print");
 
-                const div =
-                document.createElement("div");
+div.innerHTML = `
 
-                div.classList.add("pdf-print");
+<img src="${img}">
 
-                div.innerHTML = `
+<span>
+Atendimento #${index+1}
+</span>
 
-                    <img src="${img}">
+`;
 
-                    <span>
-                        Atendimento #${index+1}
-                    </span>
-                `;
+printsDiv.appendChild(div);
 
-                printsDiv.appendChild(div);
-            });
-        }
-    });
+});
 
-    document.getElementById("pdfNome")
-    .innerText =
-    `Curandeiro:
-    ${usuarioAtual.nome}`;
-
-    document.getElementById("pdfHoras")
-    .innerText =
-    `Expedientes:
-    ${total}`;
-
-    const canvas =
-    await html2canvas(container,{
-
-        scale:2
-    });
-
-    const imgData =
-    canvas.toDataURL("image/png");
-
-    const { jsPDF } =
-    window.jspdf;
-
-    const pdf =
-    new jsPDF("p","mm","a4");
-
-    const pdfWidth =
-    pdf.internal.pageSize.getWidth();
-
-    const pdfHeight =
-    (canvas.height * pdfWidth)
-    / canvas.width;
-
-    pdf.addImage(
-
-        imgData,
-
-        "PNG",
-
-        0,
-
-        0,
-
-        pdfWidth,
-
-        pdfHeight
-    );
-
-    pdf.save(
-
-        `Relatorio_${usuarioAtual.nome}.pdf`
-    );
 }
 
-// MODAL
+});
 
-function abrirImagem(src){
+document.getElementById("pdfNome")
+.innerText =
+usuarioAtual.nome;
 
-    const modal =
-    document.createElement("div");
+const canvas =
+await html2canvas(container,{
 
-    modal.classList.add("modal");
+scale:2
 
-    modal.innerHTML =
-    `<img src="${src}">`;
+});
 
-    modal.onclick = ()=>{
+const imgData =
+canvas.toDataURL("image/png");
 
-        modal.remove();
-    };
+const { jsPDF } =
+window.jspdf;
 
-    document.body.appendChild(modal);
+const pdf =
+new jsPDF("p","mm","a4");
+
+const pdfWidth =
+pdf.internal.pageSize.getWidth();
+
+const pdfHeight =
+(canvas.height * pdfWidth)
+/ canvas.width;
+
+pdf.addImage(
+
+imgData,
+
+"PNG",
+
+0,
+
+0,
+
+pdfWidth,
+
+pdfHeight
+
+);
+
+pdf.save(
+
+`Relatorio_${usuarioAtual.nome}.pdf`
+
+);
+
+}
