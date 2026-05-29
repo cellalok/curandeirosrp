@@ -412,6 +412,49 @@ resize:vertical;
 font-family:monospace;
 "></textarea>
 
+<hr>
+
+<h2>
+🔁 Resetar Senha Provisória
+</h2>
+
+<p class="info-text">
+Selecione um membro para gerar uma nova senha provisória. O membro deverá alterar a senha no próximo login.
+</p>
+
+<select id="resetUsuario">
+
+<option value="">
+Selecione um membro
+</option>
+
+</select>
+
+<button
+class="red"
+onclick="resetarSenhaUsuario()">
+
+🔁 Gerar Nova Senha
+
+</button>
+
+<textarea
+id="resultadoResetSenha"
+rows="8"
+readonly
+placeholder="A nova senha provisória aparecerá aqui..."
+style="
+width:100%;
+margin-top:15px;
+padding:15px;
+border-radius:12px;
+background:#111;
+color:#d7ffd9;
+border:1px solid #2f472f;
+resize:vertical;
+font-family:monospace;
+"></textarea>
+
 </div>
 
 </div>
