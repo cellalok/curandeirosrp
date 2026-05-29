@@ -74,13 +74,16 @@ async function entrarSistema(){
 
     if(snapshot.empty){
 
-        alert("ID ou senha inválidos.");
+        alert("ID ou senha inválido");
 
         return;
     }
 
     usuarioAtual =
     snapshot.docs[0].data();
+
+    usuarioAtual.docId =
+    snapshot.docs[0].id;
 
     document.querySelector(".login-card")
     .style.display = "none";
@@ -94,51 +97,7 @@ async function entrarSistema(){
     `☣ Bem-vindo(a),
     ${usuarioAtual.nome}`;
 
-    // ANTI FAKE CHEFE
-
-    if(
-        usuarioAtual.id === "TTT85985"
-        &&
-        usuarioAtual.cargo !== "chefe"
-    ){
-
-        alert("Violação detectada.");
-
-        location.reload();
-    }
-
-    if(usuarioAtual.cargo === "chefe"){
-
-        document.getElementById("adminPanel")
-        .style.display = "block";
-
-        document.getElementById("painelRealtime")
-        .style.display = "block";
-
-        iniciarRealtimePainel();
-    }
-}
-
-// INICIAR EXPEDIENTE
-
-async function iniciarExpediente(){
-
-    imagens = [];
-
-    atualizarPreview();
-
-    inicioExpediente = new Date();
-
-    document.getElementById("status")
-    .innerHTML =
-
-    `🟢 Entrada:
-    ${inicioExpediente.toLocaleTimeString()}`;
-
-    intervalo = setInterval(
-        atualizarTimer,
-        1000
-    );
+    // ONLINE
 
     await db.collection("ativos")
     .doc(usuarioAtual.id)
@@ -148,25 +107,108 @@ async function iniciarExpediente(){
 
         id:usuarioAtual.id,
 
-        entrada:
-        inicioExpediente.toLocaleTimeString(),
+        cargo:usuarioAtual.cargo,
 
-        entradaTimestamp:
-        Date.now(),
+        online:true,
 
-        status:"online"
+        ultimoLogin:
+        new Date().toLocaleString()
     });
+
+    // PRIMEIRO LOGIN
+
+    if(usuarioAtual.primeiroLogin){
+
+        document.getElementById(
+        "trocarSenhaCard"
+        ).style.display = "block";
+    }
+
+    // CHEFE
+
+    if(usuarioAtual.cargo === "chefe"){
+
+        document.getElementById(
+        "adminPanel"
+        ).style.display = "block";
+
+        document.getElementById(
+        "painelRealtime"
+        ).style.display = "block";
+
+        document.getElementById(
+        "membrosPanel"
+        ).style.display = "block";
+
+        iniciarRealtimePainel();
+
+        carregarMembros();
+    }
 }
 
-// TIMER
+// TROCAR SENHA
+
+async function trocarSenha(){
+
+    const novaSenha =
+    document.getElementById("novaSenha")
+    .value;
+
+    if(novaSenha.length < 4){
+
+        alert("Senha muito curta");
+
+        return;
+    }
+
+    const senhaHash =
+    await gerarHash(novaSenha);
+
+    await db.collection("usuarios")
+    .doc(usuarioAtual.docId)
+    .update({
+
+        senha:senhaHash,
+
+        primeiroLogin:false
+    });
+
+    alert("☣ Senha alterada");
+
+    document.getElementById(
+    "trocarSenhaCard"
+    ).style.display = "none";
+}
+
+// EXPEDIENTE
+
+async function iniciarExpediente(){
+
+    imagens = [];
+
+    atualizarPreview();
+
+    inicioExpediente = new Date();
+
+    intervalo =
+    setInterval(
+        atualizarTimer,
+        1000
+    );
+
+    document.getElementById("status")
+    .innerHTML =
+
+    `🟢 Entrada:
+    ${inicioExpediente.toLocaleTimeString()}`;
+}
 
 function atualizarTimer(){
 
-    if(!inicioExpediente) return;
-
     const agora = new Date();
 
-    const diff = agora - inicioExpediente;
+    const diff =
+    agora - inicioExpediente;
 
     const horas =
     Math.floor(diff / 3600000);
@@ -183,19 +225,20 @@ function atualizarTimer(){
     `${String(horas).padStart(2,'0')}:${String(minutos).padStart(2,'0')}:${String(segundos).padStart(2,'0')}`;
 }
 
-// FINALIZAR
-
 async function finalizarExpediente(){
 
     clearInterval(intervalo);
 
     const agora = new Date();
 
-    const registro = {
+    await db.collection("registros")
+    .add({
 
         nome:usuarioAtual.nome,
 
         id:usuarioAtual.id,
+
+        cargo:usuarioAtual.cargo,
 
         entrada:
         inicioExpediente.toLocaleTimeString(),
@@ -203,33 +246,26 @@ async function finalizarExpediente(){
         saida:
         agora.toLocaleTimeString(),
 
-        data:
-        agora.toLocaleDateString(),
-
         total:
         document.getElementById("timer")
         .innerText,
 
+        data:
+        agora.toLocaleDateString(),
+
         prints:imagens,
 
         timestamp:Date.now()
-    };
+    });
 
-    await db.collection("registros")
-    .add(registro);
-
-    await db.collection("ativos")
-    .doc(usuarioAtual.id)
-    .delete();
-
-    alert("Expediente salvo.");
+    alert("☣ Expediente salvo");
 }
 
 // PRINTS
 
 document
 .getElementById("upload")
-.addEventListener("change",function(e){
+.addEventListener("change",(e)=>{
 
     for(const file of e.target.files){
 
@@ -246,10 +282,9 @@ document.addEventListener("paste",(event)=>{
 
         if(item.type.indexOf("image") !== -1){
 
-            const file =
-            item.getAsFile();
-
-            processarImagem(file);
+            processarImagem(
+                item.getAsFile()
+            );
         }
     }
 });
@@ -276,7 +311,7 @@ function atualizarPreview(){
 
     container.innerHTML = "";
 
-    imagens.forEach((src,index)=>{
+    imagens.forEach((img,index)=>{
 
         const div =
         document.createElement("div");
@@ -289,7 +324,7 @@ function atualizarPreview(){
                 #${index+1}
             </div>
 
-            <img src="${src}">
+            <img src="${img}">
 
         `;
 
@@ -302,6 +337,7 @@ function atualizarPreview(){
 function iniciarRealtimePainel(){
 
     db.collection("registros")
+
     .orderBy("timestamp","desc")
 
     .onSnapshot(snapshot=>{
@@ -324,7 +360,7 @@ function iniciarRealtimePainel(){
 
             if(item.prints){
 
-                item.prints.forEach((img,index)=>{
+                item.prints.forEach((img)=>{
 
                     imagensHTML += `
 
@@ -339,7 +375,9 @@ function iniciarRealtimePainel(){
             card.innerHTML = `
 
                 <div class="online-badge">
-                    🟢 ONLINE
+
+                    🛰 REGISTRO
+
                 </div>
 
                 <h3>
@@ -351,19 +389,11 @@ function iniciarRealtimePainel(){
                 </p>
 
                 <p>
-                    📅 ${item.data}
-                </p>
-
-                <p>
-                    🟢 ${item.entrada}
-                </p>
-
-                <p>
-                    🔴 ${item.saida}
-                </p>
-
-                <p>
                     ⏱ ${item.total}
+                </p>
+
+                <p>
+                    📅 ${item.data}
                 </p>
 
                 <div class="prints-grid">
@@ -377,133 +407,129 @@ function iniciarRealtimePainel(){
             lista.appendChild(card);
         });
     });
+}
 
-    db.collection("ativos")
+// MEMBROS
 
-    .onSnapshot(snapshot=>{
+function carregarMembros(){
+
+    db.collection("usuarios")
+
+    .onSnapshot(async snapshot=>{
+
+        const lista =
+        document.getElementById("listaMembros");
+
+        lista.innerHTML = "";
+
+        const ativosSnapshot =
+        await db.collection("ativos").get();
+
+        const ativos = [];
+
+        ativosSnapshot.forEach(doc=>{
+
+            ativos.push(doc.data().id);
+        });
 
         snapshot.forEach(doc=>{
 
-            const item = doc.data();
+            const membro =
+            doc.data();
 
-            atualizarTempoOnline(
-                item.id,
-                item.entradaTimestamp
-            );
+            const card =
+            document.createElement("div");
+
+            card.classList.add("membro-card");
+
+            const online =
+            ativos.includes(membro.id);
+
+            card.innerHTML = `
+
+                <div class="
+                membro-status
+                ${online ? "online":"offline"}
+                ">
+
+                ${online ?
+                "🟢 ONLINE":
+                "🔴 OFFLINE"}
+
+                </div>
+
+                <h3>
+                    👤 ${membro.nome}
+                </h3>
+
+                <p>
+                    🪪 ${membro.id}
+                </p>
+
+                <p>
+                    🎖 ${membro.cargo}
+                </p>
+
+                <div class="membro-actions">
+
+                    <button
+                    class="promover"
+                    onclick="promoverMembro('${doc.id}')">
+
+                    👑 Promover
+
+                    </button>
+
+                    <button
+                    class="remover"
+                    onclick="removerMembro('${doc.id}')">
+
+                    🗑 Remover
+
+                    </button>
+
+                </div>
+
+            `;
+
+            lista.appendChild(card);
         });
     });
 }
 
-// TEMPO ONLINE
+// PROMOVER
 
-function atualizarTempoOnline(id,timestamp){
+async function promoverMembro(docId){
 
-    setInterval(()=>{
+    await db.collection("usuarios")
+    .doc(docId)
+    .update({
 
-        const agora = Date.now();
-
-        const diff = agora - timestamp;
-
-        const horas =
-        Math.floor(diff / 3600000);
-
-        const minutos =
-        Math.floor((diff % 3600000)/60000);
-
-        const segundos =
-        Math.floor((diff % 60000)/1000);
-
-        const card =
-        document.getElementById(`tempo-${id}`);
-
-        if(card){
-
-            card.innerText =
-
-            `${String(horas).padStart(2,'0')}:${String(minutos).padStart(2,'0')}:${String(segundos).padStart(2,'0')}`;
-        }
-
-    },1000);
-}
-
-// MODAL IMAGEM
-
-function abrirImagem(src){
-
-    const modal =
-    document.createElement("div");
-
-    modal.classList.add("modal");
-
-    modal.innerHTML = `
-
-        <img src="${src}">
-
-    `;
-
-    modal.onclick = ()=>{
-
-        modal.remove();
-    };
-
-    document.body.appendChild(modal);
-}
-
-// PDF
-
-async function gerarPDFSemanal(){
-
-    const { jsPDF } = window.jspdf;
-
-    const pdf = new jsPDF();
-
-    pdf.setFontSize(22);
-
-    pdf.text(
-        "RELATÓRIO SEMANAL",
-        20,
-        20
-    );
-
-    const snapshot =
-    await db.collection("registros")
-    .where("id","==",usuarioAtual.id)
-    .get();
-
-    let y = 40;
-
-    snapshot.forEach(doc=>{
-
-        const item = doc.data();
-
-        pdf.text(
-
-            `${item.data} | ${item.total}`,
-
-            20,
-
-            y
-        );
-
-        y += 10;
+        cargo:"chefe"
     });
 
-    pdf.save(
-
-        `relatorio_${usuarioAtual.nome}.pdf`
-    );
+    alert("☣ Promovido");
 }
 
-// ADICIONAR CURANDEIRO
+// REMOVER
+
+async function removerMembro(docId){
+
+    const confirmar =
+    confirm("Remover membro?");
+
+    if(!confirmar) return;
+
+    await db.collection("usuarios")
+    .doc(docId)
+    .delete();
+
+    alert("☣ Removido");
+}
+
+// ADMIN
 
 async function adicionarCurandeiro(){
-
-    if(usuarioAtual.cargo !== "chefe"){
-
-        alert("Sem permissão.");
-
-        return;
-    }
 
     const nome =
     document.getElementById("novoNome").value;
@@ -528,11 +554,136 @@ async function adicionarCurandeiro(){
 
         senha:senhaHash,
 
-        cargo:"curandeiro"
+        cargo:"curandeiro",
+
+        primeiroLogin:true
     });
 
     alert(
 
-        `☣ Curandeiro criado.\nSenha provisória: ${senhaTemp}`
+        `☣ Curandeiro criado
+
+Senha provisória:
+${senhaTemp}`
     );
 }
+
+// PDF
+
+async function gerarPDFSemanal(){
+
+    const container =
+    document.getElementById("pdfTemplate");
+
+    const printsDiv =
+    document.getElementById("pdfPrints");
+
+    printsDiv.innerHTML = "";
+
+    const snapshot =
+    await db.collection("registros")
+    .where("id","==",usuarioAtual.id)
+    .get();
+
+    let total = 0;
+
+    snapshot.forEach(doc=>{
+
+        const item = doc.data();
+
+        total++;
+
+        if(item.prints){
+
+            item.prints.forEach((img,index)=>{
+
+                const div =
+                document.createElement("div");
+
+                div.classList.add("pdf-print");
+
+                div.innerHTML = `
+
+                    <img src="${img}">
+
+                    <span>
+                        Atendimento #${index+1}
+                    </span>
+                `;
+
+                printsDiv.appendChild(div);
+            });
+        }
+    });
+
+    document.getElementById("pdfNome")
+    .innerText =
+    `Curandeiro:
+    ${usuarioAtual.nome}`;
+
+    document.getElementById("pdfHoras")
+    .innerText =
+    `Expedientes:
+    ${total}`;
+
+    const canvas =
+    await html2canvas(container,{
+
+        scale:2
+    });
+
+    const imgData =
+    canvas.toDataURL("image/png");
+
+    const { jsPDF } =
+    window.jspdf;
+
+    const pdf =
+    new jsPDF("p","mm","a4");
+
+    const pdfWidth =
+    pdf.internal.pageSize.getWidth();
+
+    const pdfHeight =
+    (canvas.height * pdfWidth)
+    / canvas.width;
+
+    pdf.addImage(
+
+        imgData,
+
+        "PNG",
+
+        0,
+
+        0,
+
+        pdfWidth,
+
+        pdfHeight
+    );
+
+    pdf.save(
+
+        `Relatorio_${usuarioAtual.nome}.pdf`
+    );
+}
+
+// MODAL
+
+function abrirImagem(src){
+
+    const modal =
+    document.createElement("div");
+
+    modal.classList.add("modal");
+
+    modal.innerHTML =
+    `<img src="${src}">`;
+
+    modal.onclick = ()=>{
+
+        modal.remove();
+    };
+
+    document.body.appendChild(modal);
