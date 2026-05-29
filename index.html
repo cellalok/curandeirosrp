@@ -58,6 +58,36 @@ content="width=device-width, initial-scale=1.0">
 
     </section>
 
+    <!-- TROCAR SENHA -->
+
+    <div
+    class="card"
+    id="trocarSenhaCard"
+    style="display:none;">
+
+        <h2>
+            🔐 Trocar Senha
+        </h2>
+
+        <div class="senha-box">
+
+            <input
+            type="password"
+            id="novaSenha"
+            placeholder="Nova senha">
+
+            <button
+            class="blue"
+            onclick="trocarSenha()">
+
+            Alterar Senha
+
+            </button>
+
+        </div>
+
+    </div>
+
     <!-- PAINEL -->
 
     <section
@@ -179,6 +209,21 @@ content="width=device-width, initial-scale=1.0">
             </h2>
 
             <div id="listaRealtime"></div>
+
+        </div>
+
+        <!-- MEMBROS -->
+
+        <div
+        class="card"
+        id="membrosPanel"
+        style="display:none;">
+
+            <h2>
+                👥 Membros Curandeiros
+            </h2>
+
+            <div id="listaMembros"></div>
 
         </div>
 
