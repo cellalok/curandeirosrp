@@ -117,33 +117,6 @@ location.reload();
 }
 
 // =========================
-// LOGIN DUPLO
-// =========================
-
-async function verificarLoginDuplicado(id){
-const snapshot = await db.collection("ativos")
-.where("id","==",id)
-.get();
-
-if(snapshot.empty) return false;
-
-const agora = Date.now();
-let loginAtivo = false;
-
-for(const doc of snapshot.docs){
-const dados = doc.data();
-
-if(dados.ultimoPing && agora - dados.ultimoPing <= 45000){
-loginAtivo = true;
-}else{
-await db.collection("ativos").doc(doc.id).delete();
-}
-}
-
-return loginAtivo;
-}
-
-// =========================
 // HEARTBEAT
 // =========================
 
@@ -207,13 +180,6 @@ docId:doc.id
 
 if(!usuarioEncontrado){
 alert("ID inválido");
-return;
-}
-
-const jaLogado = await verificarLoginDuplicado(usuarioEncontrado.id);
-
-if(jaLogado){
-alert("Usuário já está online");
 return;
 }
 
