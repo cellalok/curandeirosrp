@@ -5,8 +5,7 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>☣ Sistema Curandeiros</title>
 
@@ -26,208 +25,133 @@ content="width=device-width, initial-scale=1.0">
 
 <div class="container">
 
-    <header>
+<header>
 
-        <h1>☣ Sistema de Curandeiros</h1>
+<h1>☣ Sistema de Curandeiros</h1>
 
-        <p>
-            Painel Médico Pós-Apocalipse
-        </p>
+<p>Painel Médico Pós-Apocalipse</p>
 
-    </header>
+</header>
 
-    <!-- LOGIN -->
+<!-- LOGIN -->
 
-    <section class="login-card">
+<section class="login-card">
 
-        <h2>🔐 Login Seguro</h2>
+<h2>🔐 Login Seguro</h2>
 
-        <input
-        type="text"
-        id="idLogin"
-        placeholder="ID">
+<input type="text" id="idLogin" placeholder="ID">
 
-        <input
-        type="password"
-        id="senhaLogin"
-        placeholder="Senha">
+<input type="password" id="senhaLogin" placeholder="Senha">
 
-        <button onclick="entrarSistema()">
-            Entrar
-        </button>
+<button onclick="entrarSistema()">
+Entrar
+</button>
 
-    </section>
+</section>
 
-    <!-- TROCAR SENHA -->
+<!-- TROCAR SENHA -->
 
-    <div
-    class="card"
-    id="trocarSenhaCard"
-    style="display:none;">
+<div class="card" id="trocarSenhaCard" style="display:none;">
 
-        <h2>
-            🔐 Trocar Senha
-        </h2>
+<h2>🔐 Trocar Senha</h2>
 
-        <div class="senha-box">
+<input type="password" id="novaSenha" placeholder="Nova senha">
 
-            <input
-            type="password"
-            id="novaSenha"
-            placeholder="Nova senha">
+<button class="blue" onclick="trocarSenha()">
+Alterar Senha
+</button>
 
-            <button
-            class="blue"
-            onclick="trocarSenha()">
+</div>
 
-            Alterar Senha
+<!-- PAINEL -->
 
-            </button>
+<section id="painel" style="display:none;">
 
-        </div>
+<!-- BATE PONTO -->
 
-    </div>
+<div class="card">
 
-    <!-- PAINEL -->
+<h2>⏱ Bate Ponto</h2>
 
-    <section
-    id="painel"
-    style="display:none;">
+<button class="green" onclick="iniciarExpediente()">
+▶ Entrada
+</button>
 
-        <!-- BATE PONTO -->
+<button class="red" onclick="finalizarExpediente()">
+■ Saída
+</button>
 
-        <div class="card">
+<div id="status"></div>
 
-            <h2>⏱ Bate Ponto</h2>
+<div class="timer" id="timer">
+00:00:00
+</div>
 
-            <button
-            class="green"
-            onclick="iniciarExpediente()">
+</div>
 
-            ▶ Entrada
+<!-- PRINTS -->
 
-            </button>
+<div class="card">
 
-            <button
-            class="red"
-            onclick="finalizarExpediente()">
+<h2>📸 Prints dos Atendimentos</h2>
 
-            ■ Saída
+<input type="file" id="upload" multiple accept="image/*">
 
-            </button>
+<p>CTRL + V para colar prints</p>
 
-            <div id="status"></div>
+<div id="previewContainer"></div>
 
-            <div
-            class="timer"
-            id="timer">
+</div>
 
-            00:00:00
+<!-- PDF -->
 
-            </div>
+<div class="card">
 
-        </div>
+<h2>📄 Relatório Semanal</h2>
 
-        <!-- PRINTS -->
+<button class="blue" onclick="gerarPDFSemanal()">
+Gerar PDF
+</button>
 
-        <div class="card">
+</div>
 
-            <h2>
-                📸 Prints dos Atendimentos
-            </h2>
+<!-- ADMIN -->
 
-            <input
-            type="file"
-            id="upload"
-            multiple
-            accept="image/*">
+<div class="card" id="adminPanel" style="display:none;">
 
-            <p>
-                CTRL + V para colar prints
-            </p>
+<h2>👑 Administração</h2>
 
-            <div id="previewContainer"></div>
+<input type="text" id="novoNome" placeholder="Nome">
 
-        </div>
+<input type="text" id="novoID" placeholder="ID">
 
-        <!-- PDF -->
+<button class="green" onclick="adicionarCurandeiro()">
+➕ Adicionar Curandeiro
+</button>
 
-        <div class="card">
+</div>
 
-            <h2>
-                📄 Relatório Semanal
-            </h2>
+<!-- REALTIME -->
 
-            <button
-            class="blue"
-            onclick="gerarPDFSemanal()">
+<div class="card" id="painelRealtime" style="display:none;">
 
-            Gerar PDF
+<h2>🛰 Painel Administrativo Realtime</h2>
 
-            </button>
+<div id="listaRealtime"></div>
 
-        </div>
+</div>
 
-        <!-- ADMIN -->
+<!-- MEMBROS -->
 
-        <div
-        class="card"
-        id="adminPanel"
-        style="display:none;">
+<div class="card" id="membrosPanel" style="display:none;">
 
-            <h2>👑 Administração</h2>
+<h2>👥 Membros Curandeiros</h2>
 
-            <input
-            type="text"
-            id="novoNome"
-            placeholder="Nome">
+<div id="listaMembros"></div>
 
-            <input
-            type="text"
-            id="novoID"
-            placeholder="ID">
+</div>
 
-            <button
-            class="green"
-            onclick="adicionarCurandeiro()">
-
-            ➕ Adicionar Curandeiro
-
-            </button>
-
-        </div>
-
-        <!-- REALTIME -->
-
-        <div
-        class="card"
-        id="painelRealtime"
-        style="display:none;">
-
-            <h2>
-                🛰 Painel Administrativo Realtime
-            </h2>
-
-            <div id="listaRealtime"></div>
-
-        </div>
-
-        <!-- MEMBROS -->
-
-        <div
-        class="card"
-        id="membrosPanel"
-        style="display:none;">
-
-            <h2>
-                👥 Membros Curandeiros
-            </h2>
-
-            <div id="listaMembros"></div>
-
-        </div>
-
-    </section>
+</section>
 
 </div>
 
@@ -235,19 +159,17 @@ content="width=device-width, initial-scale=1.0">
 
 <div id="pdfTemplate">
 
-    <div class="pdf-header">
+<div class="pdf-header">
 
-        <h1>
-            ☣ RELATÓRIO CURANDEIRO
-        </h1>
+<h1>☣ RELATÓRIO CURANDEIRO</h1>
 
-        <p id="pdfNome"></p>
+<p id="pdfNome"></p>
 
-        <p id="pdfHoras"></p>
+<p id="pdfHoras"></p>
 
-    </div>
+</div>
 
-    <div id="pdfPrints"></div>
+<div id="pdfPrints"></div>
 
 </div>
 
