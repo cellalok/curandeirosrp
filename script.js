@@ -28,7 +28,6 @@ const gerarPDFAutomatico = true;
 
 const ADMINS_NOMES = [
 "Luna Serenight"
-"Edu Mello"  
 // "Nome Do Novo Admin"
 ];
 
