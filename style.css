@@ -27,9 +27,7 @@ box-sizing:border-box;
 
 }
 
-/* ==========================================
-   BODY
-========================================== */
+/* BODY */
 
 body{
 
@@ -40,7 +38,6 @@ linear-gradient(
 rgba(0,0,0,.82),
 rgba(0,0,0,.92)
 ),
-
 url("https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1920&auto=format&fit=crop");
 
 background-size:cover;
@@ -55,9 +52,7 @@ padding:30px;
 
 }
 
-/* ==========================================
-   CONTAINER
-========================================== */
+/* CONTAINER */
 
 .container{
 
@@ -66,9 +61,7 @@ margin:auto;
 
 }
 
-/* ==========================================
-   HEADER
-========================================== */
+/* HEADER */
 
 header{
 
@@ -111,9 +104,7 @@ font-size:14px;
 
 }
 
-/* ==========================================
-   CARDS
-========================================== */
+/* CARDS */
 
 .card,
 .login-card{
@@ -175,9 +166,7 @@ font-size:20px;
 
 }
 
-/* ==========================================
-   INPUTS
-========================================== */
+/* INPUTS */
 
 input,
 select,
@@ -219,13 +208,11 @@ box-shadow:
 textarea{
 
 resize:vertical;
-min-height:180px;
+min-height:160px;
 
 }
 
-/* ==========================================
-   BOTÕES
-========================================== */
+/* BOTÕES */
 
 .buttons{
 
@@ -318,9 +305,7 @@ linear-gradient(
 
 }
 
-/* ==========================================
-   STATUS
-========================================== */
+/* STATUS */
 
 #status{
 
@@ -336,9 +321,7 @@ border:1px solid rgba(157,255,99,.25);
 
 }
 
-/* ==========================================
-   TIMER
-========================================== */
+/* TIMER */
 
 .timer{
 
@@ -357,9 +340,7 @@ text-shadow:
 
 }
 
-/* ==========================================
-   PRINTS
-========================================== */
+/* PRINTS */
 
 #previewContainer{
 
@@ -435,9 +416,7 @@ font-size:12px;
 
 }
 
-/* ==========================================
-   HISTÓRICO
-========================================== */
+/* HISTÓRICO */
 
 #historicoLista{
 
@@ -449,34 +428,51 @@ gap:15px;
 
 }
 
-/* ==========================================
-   ADMIN TABS
-========================================== */
+/* ADMIN */
+
+#adminPanel{
+
+max-width:100%;
+
+}
+
+/* ADMIN TABS */
 
 .admin-tabs{
 
 display:flex;
 flex-wrap:wrap;
+
+align-items:center;
+justify-content:flex-start;
+
 gap:10px;
 
-margin-bottom:20px;
+margin:15px 0 20px;
 
 }
 
 .admin-tabs button{
 
-flex:1;
-min-width:140px;
+flex:0 0 auto;
+
+min-width:130px;
+
+padding:12px 18px;
+
+font-size:14px;
 
 }
 
-/* ==========================================
-   ABAS ADMIN
-========================================== */
+/* ABAS */
 
 .admin-aba{
 
+display:block;
+
 animation:fadeIn .25s ease;
+
+margin-top:10px;
 
 }
 
@@ -484,7 +480,7 @@ animation:fadeIn .25s ease;
 
 from{
 opacity:0;
-transform:translateY(10px);
+transform:translateY(8px);
 }
 
 to{
@@ -494,9 +490,7 @@ transform:translateY(0);
 
 }
 
-/* ==========================================
-   REALTIME
-========================================== */
+/* LISTAS */
 
 #listaRealtime,
 #listaLogs,
@@ -508,13 +502,15 @@ gap:15px;
 
 margin-top:15px;
 
-max-height:650px;
+max-height:420px;
 
 overflow-y:auto;
 
 padding-right:8px;
 
 }
+
+/* CARDS ADMIN */
 
 .realtime-card,
 .membro-card{
@@ -526,6 +522,18 @@ border:1px solid rgba(157,255,99,.18);
 border-radius:14px;
 
 padding:15px;
+
+transition:.25s;
+
+}
+
+.realtime-card:hover,
+.membro-card:hover{
+
+transform:translateY(-2px);
+
+border-color:
+rgba(157,255,99,.45);
 
 }
 
@@ -549,9 +557,7 @@ opacity:.95;
 
 }
 
-/* ==========================================
-   STATUS ONLINE
-========================================== */
+/* ONLINE / OFFLINE */
 
 .status-online{
 
@@ -575,30 +581,10 @@ text-shadow:
 
 }
 
-/* ==========================================
-   MEMBROS
-========================================== */
+/* GERADOR FIREBASE / RESET SENHA */
 
-.membro-card{
-
-transition:.25s;
-
-}
-
-.membro-card:hover{
-
-transform:translateY(-3px);
-
-border-color:
-rgba(157,255,99,.45);
-
-}
-
-/* ==========================================
-   GERADOR FIREBASE
-========================================== */
-
-#firebaseResultado{
+#firebaseResultado,
+#resultadoResetSenha{
 
 font-family:monospace;
 
@@ -606,11 +592,21 @@ font-size:13px;
 
 line-height:1.5;
 
+background:#0d0d0d;
+
+color:#d7ffd9;
+
+border:1px solid #2f472f;
+
 }
 
-/* ==========================================
-   TEXTO INFO
-========================================== */
+#resetUsuario{
+
+margin-bottom:15px;
+
+}
+
+/* TEXTO INFO */
 
 .info-text{
 
@@ -624,13 +620,11 @@ line-height:1.5;
 
 }
 
-/* ==========================================
-   HR
-========================================== */
+/* HR */
 
 hr{
 
-margin:20px 0;
+margin:25px 0;
 
 border:none;
 
@@ -646,9 +640,7 @@ transparent
 
 }
 
-/* ==========================================
-   SCROLLBAR
-========================================== */
+/* SCROLLBAR */
 
 ::-webkit-scrollbar{
 
@@ -670,9 +662,7 @@ border-radius:20px;
 
 }
 
-/* ==========================================
-   RESPONSIVO
-========================================== */
+/* RESPONSIVO */
 
 @media(max-width:768px){
 
@@ -705,6 +695,8 @@ flex-direction:column;
 .admin-tabs button{
 
 width:100%;
+
+min-width:unset;
 
 }
 
