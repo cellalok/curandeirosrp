@@ -4,13 +4,17 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>☣ Sistema de Curandeiros</title>
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>☣ Sistema Curandeiros</title>
 
 <link rel="stylesheet" href="style.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 
@@ -26,7 +30,9 @@
 
         <h1>☣ Sistema de Curandeiros</h1>
 
-        <p>Painel Médico Pós-Apocalipse</p>
+        <p>
+            Painel Médico Pós-Apocalipse
+        </p>
 
     </header>
 
@@ -39,7 +45,7 @@
         <input
         type="text"
         id="idLogin"
-        placeholder="ID do Curandeiro">
+        placeholder="ID">
 
         <input
         type="password"
@@ -54,7 +60,9 @@
 
     <!-- PAINEL -->
 
-    <section id="painel" style="display:none;">
+    <section
+    id="painel"
+    style="display:none;">
 
         <!-- BATE PONTO -->
 
@@ -80,8 +88,12 @@
 
             <div id="status"></div>
 
-            <div class="timer" id="timer">
-                00:00:00
+            <div
+            class="timer"
+            id="timer">
+
+            00:00:00
+
             </div>
 
         </div>
@@ -90,7 +102,9 @@
 
         <div class="card">
 
-            <h2>📸 Prints dos Atendimentos</h2>
+            <h2>
+                📸 Prints dos Atendimentos
+            </h2>
 
             <input
             type="file"
@@ -98,7 +112,9 @@
             multiple
             accept="image/*">
 
-            <p>CTRL + V para colar prints</p>
+            <p>
+                CTRL + V para colar prints
+            </p>
 
             <div id="previewContainer"></div>
 
@@ -108,7 +124,9 @@
 
         <div class="card">
 
-            <h2>📄 Relatório Semanal</h2>
+            <h2>
+                📄 Relatório Semanal
+            </h2>
 
             <button
             class="blue"
@@ -156,13 +174,35 @@
         id="painelRealtime"
         style="display:none;">
 
-            <h2>🛰 Painel Administrativo Realtime</h2>
+            <h2>
+                🛰 Painel Administrativo Realtime
+            </h2>
 
             <div id="listaRealtime"></div>
 
         </div>
 
     </section>
+
+</div>
+
+<!-- TEMPLATE PDF -->
+
+<div id="pdfTemplate">
+
+    <div class="pdf-header">
+
+        <h1>
+            ☣ RELATÓRIO CURANDEIRO
+        </h1>
+
+        <p id="pdfNome"></p>
+
+        <p id="pdfHoras"></p>
+
+    </div>
+
+    <div id="pdfPrints"></div>
 
 </div>
 
