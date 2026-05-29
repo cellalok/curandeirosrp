@@ -1,18 +1,27 @@
 *{
+
     margin:0;
+
     padding:0;
+
     box-sizing:border-box;
+
     font-family:Arial, Helvetica, sans-serif;
 }
 
 body{
 
     background:
-    linear-gradient(rgba(0,0,0,.84), rgba(0,0,0,.92)),
+    linear-gradient(
+    rgba(0,0,0,.82),
+    rgba(0,0,0,.92)),
+
     url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1974&auto=format&fit=crop');
 
     background-size:cover;
+
     background-position:center;
+
     background-attachment:fixed;
 
     color:white;
@@ -33,7 +42,7 @@ header{
 
     text-align:center;
 
-    margin-bottom:30px;
+    margin-bottom:35px;
 }
 
 header h1{
@@ -41,44 +50,60 @@ header h1{
     font-size:52px;
 
     color:#9cff57;
+
+    margin-bottom:10px;
 }
 
 header p{
 
     opacity:.8;
 
-    margin-top:10px;
+    font-size:18px;
 }
 
 .login-card,
 .card{
 
-    background:rgba(10,15,18,.92);
+    background:
+    rgba(12,18,22,.94);
 
-    border-radius:18px;
+    border-radius:22px;
 
-    padding:25px;
+    padding:30px;
 
     margin-bottom:25px;
 
-    border:1px solid rgba(255,255,255,.08);
+    border:
+    1px solid rgba(255,255,255,.08);
+
+    box-shadow:
+    0 0 25px rgba(0,0,0,.35);
+}
+
+.card h2{
+
+    margin-bottom:20px;
+
+    color:#9cff57;
 }
 
 input{
 
     width:100%;
 
-    padding:14px;
+    padding:15px;
 
     margin-bottom:15px;
 
     border:none;
 
-    border-radius:10px;
+    border-radius:12px;
 
     background:#10181d;
 
     color:white;
+
+    font-size:16px;
 }
 
 button{
@@ -87,13 +112,15 @@ button{
 
     border:none;
 
-    border-radius:10px;
+    border-radius:12px;
 
     cursor:pointer;
 
     font-weight:bold;
 
     transition:.2s;
+
+    margin-right:10px;
 }
 
 button:hover{
@@ -102,6 +129,7 @@ button:hover{
 }
 
 .green{
+
     background:#58db71;
 }
 
@@ -123,13 +151,20 @@ button:hover{
 
     margin-top:20px;
 
-    font-size:48px;
-
-    color:#9cff57;
+    font-size:52px;
 
     text-align:center;
 
+    color:#9cff57;
+
     font-weight:bold;
+}
+
+#status{
+
+    margin-top:20px;
+
+    font-size:18px;
 }
 
 #previewContainer{
@@ -139,20 +174,20 @@ button:hover{
     grid-template-columns:
     repeat(auto-fill,minmax(180px,1fr));
 
-    gap:15px;
+    gap:18px;
 
-    margin-top:20px;
+    margin-top:25px;
 }
 
 .preview-box{
 
+    position:relative;
+
     background:#10181d;
 
-    border-radius:14px;
+    border-radius:16px;
 
-    padding:10px;
-
-    position:relative;
+    overflow:hidden;
 }
 
 .preview-box img{
@@ -162,8 +197,6 @@ button:hover{
     height:180px;
 
     object-fit:cover;
-
-    border-radius:10px;
 }
 
 .preview-number{
@@ -178,51 +211,80 @@ button:hover{
 
     color:black;
 
-    padding:4px 10px;
+    padding:5px 12px;
 
     border-radius:8px;
 
     font-weight:bold;
 }
 
-#listaRealtime{
+/* REALTIME */
+
+#listaRealtime,
+#listaMembros{
 
     display:grid;
 
     grid-template-columns:
-    repeat(auto-fill,minmax(320px,1fr));
+    repeat(auto-fill,minmax(340px,1fr));
 
-    gap:20px;
+    gap:22px;
+
+    margin-top:25px;
 }
 
-.realtime-card{
+.realtime-card,
+.membro-card{
 
-    background:#10181d;
+    background:#11191f;
 
-    border-radius:16px;
+    border-radius:20px;
 
-    padding:20px;
+    padding:25px;
 
-    border:1px solid rgba(255,255,255,.08);
+    border:
+    1px solid rgba(255,255,255,.08);
+
+    box-shadow:
+    0 0 20px rgba(0,0,0,.35);
 }
 
-.online-badge{
+.realtime-card h3,
+.membro-card h3{
+
+    color:#9cff57;
+
+    margin-bottom:15px;
+}
+
+.online-badge,
+.membro-status{
 
     display:inline-block;
+
+    padding:6px 12px;
+
+    border-radius:8px;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+    margin-bottom:15px;
+}
+
+.online{
 
     background:#58db71;
 
     color:black;
+}
 
-    padding:4px 10px;
+.offline{
 
-    border-radius:8px;
+    background:#ff6262;
 
-    font-size:12px;
-
-    font-weight:bold;
-
-    margin-bottom:10px;
+    color:white;
 }
 
 .prints-grid{
@@ -230,48 +292,131 @@ button:hover{
     display:grid;
 
     grid-template-columns:
-    repeat(auto-fill,minmax(90px,1fr));
+    repeat(auto-fill,minmax(100px,1fr));
 
-    gap:10px;
+    gap:12px;
 
-    margin-top:15px;
+    margin-top:20px;
 }
 
 .prints-grid img{
 
     width:100%;
 
-    height:90px;
+    height:100px;
 
     object-fit:cover;
 
-    border-radius:10px;
+    border-radius:12px;
 
     cursor:pointer;
 }
 
-.modal{
-
-    position:fixed;
-
-    inset:0;
-
-    background:rgba(0,0,0,.92);
+.membro-actions{
 
     display:flex;
 
-    justify-content:center;
+    gap:10px;
 
-    align-items:center;
-
-    z-index:9999;
+    margin-top:18px;
 }
 
-.modal img{
+.promover{
 
-    max-width:90%;
+    background:#4d91ff;
 
-    max-height:90%;
+    color:white;
+}
 
-    border-radius:14px;
+.remover{
+
+    background:#ff6262;
+
+    color:white;
+}
+
+/* PDF */
+
+#pdfTemplate{
+
+    width:1200px;
+
+    min-height:1600px;
+
+    position:absolute;
+
+    left:-99999px;
+
+    top:0;
+
+    padding:50px;
+
+    background:
+    linear-gradient(
+    rgba(0,0,0,.82),
+    rgba(0,0,0,.92)),
+
+    url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1974&auto=format&fit=crop');
+
+    background-size:cover;
+
+    color:white;
+}
+
+.pdf-header{
+
+    text-align:center;
+
+    margin-bottom:40px;
+}
+
+.pdf-header h1{
+
+    font-size:42px;
+
+    color:#9cff57;
+
+    margin-bottom:20px;
+}
+
+#pdfPrints{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(3,1fr);
+
+    gap:25px;
+}
+
+.pdf-print{
+
+    background:
+    rgba(0,0,0,.55);
+
+    border-radius:18px;
+
+    overflow:hidden;
+}
+
+.pdf-print img{
+
+    width:100%;
+
+    height:260px;
+
+    object-fit:cover;
+}
+
+.pdf-print span{
+
+    display:block;
+
+    padding:14px;
+
+    text-align:center;
+
+    font-size:22px;
+
+    color:#9cff57;
 }
