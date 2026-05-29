@@ -21,8 +21,15 @@ let imagens = [];
 let usuariosCache = [];
 let ativosCache = {};
 
+let usuariosOnlineCache = [];
+let ativosOnlineCache = {};
+
 const gerarPDFAutomatico = true;
-const ADMIN_NOME = "Luna Serenight";
+
+const ADMINS_NOMES = [
+"Luna Serenight"
+// "Nome Do Novo Admin"
+];
 
 // =========================
 // HASH
@@ -60,7 +67,8 @@ return `${horas}h ${minutos}min ${segundos}s`;
 }
 
 function usuarioEhAdmin(){
-return usuarioAtual && usuarioAtual.nome === ADMIN_NOME;
+return usuarioAtual &&
+ADMINS_NOMES.includes(usuarioAtual.nome);
 }
 
 function gerarSenhaProvisoria(){
@@ -232,6 +240,9 @@ alert("Primeiro acesso detectado.\n\nAltere sua senha provisória antes de conti
 },500);
 }
 
+// Online/offline visível para todos
+carregarMembrosOnlineGeral();
+
 if(usuarioEhAdmin()){
 document.getElementById("adminPanel").style.display = "block";
 
@@ -340,7 +351,7 @@ alert("Erro ao alterar senha. Verifique as regras do Firebase.");
 
 async function gerarUsuarioFirebase(){
 if(!usuarioEhAdmin()){
-alert("Apenas Luna Serenight pode usar esta ferramenta.");
+alert("Você não tem permissão para usar esta ferramenta.");
 return;
 }
 
@@ -398,7 +409,7 @@ select.appendChild(option);
 
 async function resetarSenhaUsuario(){
 if(!usuarioEhAdmin()){
-alert("Apenas Luna Serenight pode resetar senhas.");
+alert("Você não tem permissão para resetar senhas.");
 return;
 }
 
@@ -1016,7 +1027,7 @@ lista.appendChild(card);
 }
 
 // =========================
-// MEMBROS ONLINE/OFFLINE
+// MEMBROS ADMIN ONLINE/OFFLINE
 // =========================
 
 function carregarMembros(){
@@ -1080,6 +1091,79 @@ card.innerHTML = `
 <p>${formatarCargo(membro.cargo)}</p>
 <p>ID: ${membro.id}</p>
 <p>Primeiro login: ${membro.primeiroLogin ? "Sim" : "Não"}</p>
+
+<p>
+<span class="${online ? "status-online" : "status-offline"}">
+● ${online ? "ONLINE" : "OFFLINE"}
+</span>
+</p>
+`;
+
+lista.appendChild(card);
+});
+}
+
+// =========================
+// MEMBROS ONLINE GERAL
+// =========================
+
+function carregarMembrosOnlineGeral(){
+db.collection("usuarios")
+.onSnapshot(snapshot=>{
+usuariosOnlineCache = [];
+
+snapshot.forEach(doc=>{
+usuariosOnlineCache.push({
+docId:doc.id,
+...doc.data()
+});
+});
+
+renderizarMembrosOnlineGeral();
+});
+
+db.collection("ativos")
+.onSnapshot(snapshot=>{
+ativosOnlineCache = {};
+
+snapshot.forEach(doc=>{
+const ativo = doc.data();
+
+ativosOnlineCache[ativo.id] = ativo;
+});
+
+renderizarMembrosOnlineGeral();
+});
+
+setInterval(()=>{
+renderizarMembrosOnlineGeral();
+},30000);
+}
+
+function renderizarMembrosOnlineGeral(){
+const lista = document.getElementById("listaMembrosOnline");
+
+if(!lista || !usuariosOnlineCache.length) return;
+
+lista.innerHTML = "";
+
+const agora = Date.now();
+
+usuariosOnlineCache.forEach(membro=>{
+const ativo = ativosOnlineCache[membro.id];
+
+const online =
+ativo &&
+ativo.ultimoPing &&
+agora - ativo.ultimoPing <= 45000;
+
+const card = document.createElement("div");
+
+card.classList.add("membro-card");
+
+card.innerHTML = `
+<h3>${membro.nome}</h3>
+<p>${formatarCargo(membro.cargo)}</p>
 
 <p>
 <span class="${online ? "status-online" : "status-offline"}">
