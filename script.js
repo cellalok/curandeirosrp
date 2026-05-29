@@ -3,10 +3,10 @@ const firebaseConfig = {
     apiKey: "AIzaSyDobXJ_knDYZpmPAoktRzEU8U3GGB6t3cI",
 
     authDomain: "painel-curandeiros.firebaseapp.com",
-    
-    projectId: "https://painel-curandeiros-default-rtdb.firebaseio.com",
 
     databaseURL: "https://painel-curandeiros-default-rtdb.firebaseio.com",
+    
+    projectId: "https://painel-curandeiros-default-rtdb.firebaseio.com",
     
     storageBucket: "painel-curandeiros.firebasestorage.app",
 
