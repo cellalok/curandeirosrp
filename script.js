@@ -49,93 +49,140 @@ async function gerarHash(texto){
 
     return hashArray
     .map(b =>
-        b.toString(16).padStart(2,"0")
-    )
+        b.toString(16).padStart(2,"0"))
     .join("");
 }
 
-// LOGIN OTIMIZADO
+// LOGIN
 
 async function entrarSistema(){
 
     try{
 
-        const id =
+        const idDigitado =
         document.getElementById("idLogin")
-        .value.trim();
+        .value
+        .trim()
+        .toUpperCase();
 
-        const senha =
+        const senhaDigitada =
         document.getElementById("senhaLogin")
-        .value.trim();
+        .value
+        .trim();
 
-        if(!id || !senha){
+        console.log(
+            "Tentando login:",
+            idDigitado
+        );
 
-            alert("Preencha ID e senha");
-
-            return;
-        }
-
-        const botao =
-        document.querySelector(".login-card button");
-
-        botao.disabled = true;
-
-        botao.innerText = "Entrando...";
-
-        // BUSCA APENAS ID
+        // BUSCA TODOS
 
         const snapshot =
         await db.collection("usuarios")
-        .where("id","==",id)
-        .limit(1)
         .get();
 
-        if(snapshot.empty){
+        console.log(
+            "Usuários encontrados:",
+            snapshot.size
+        );
 
-            alert("ID inválido");
+        let usuarioEncontrado = null;
 
-            botao.disabled = false;
+        snapshot.forEach(doc=>{
 
-            botao.innerText = "Entrar";
+            const dados = doc.data();
+
+            console.log(
+                "Documento:",
+                dados
+            );
+
+            // TENTA TODOS OS CAMPOS POSSÍVEIS
+
+            const idBanco =
+
+                (
+                    dados.id ||
+                    dados.ID ||
+                    dados.Id ||
+                    dados.userId ||
+                    ""
+                )
+
+                .toString()
+                .trim()
+                .toUpperCase();
+
+            console.log(
+                "ID banco:",
+                idBanco
+            );
+
+            if(idBanco === idDigitado){
+
+                usuarioEncontrado = {
+
+                    ...dados,
+
+                    docId:doc.id
+                };
+            }
+        });
+
+        if(!usuarioEncontrado){
+
+            alert(
+                "ID inválido"
+            );
 
             return;
         }
 
-        const usuario =
-        snapshot.docs[0];
-
-        const dados =
-        usuario.data();
-
-        // COMPARA HASH LOCALMENTE
+        // HASH
 
         const senhaHash =
-        await gerarHash(senha);
+        await gerarHash(
+            senhaDigitada
+        );
 
-        if(dados.senha !== senhaHash){
+        console.log(
+            "Hash digitado:",
+            senhaHash
+        );
 
-            alert("Senha inválida");
+        console.log(
+            "Hash banco:",
+            usuarioEncontrado.senha
+        );
 
-            botao.disabled = false;
+        if(
+            usuarioEncontrado.senha
+            !== senhaHash
+        ){
 
-            botao.innerText = "Entrar";
+            alert(
+                "Senha inválida"
+            );
 
             return;
         }
 
-        usuarioAtual = dados;
+        usuarioAtual =
+        usuarioEncontrado;
 
-        usuarioAtual.docId =
-        usuario.id;
+        // LOGIN OK
 
-        document.querySelector(".login-card")
-        .style.display = "none";
+        document.querySelector(
+            ".login-card"
+        ).style.display = "none";
 
-        document.getElementById("painel")
-        .style.display = "block";
+        document.getElementById(
+            "painel"
+        ).style.display = "block";
 
-        document.getElementById("status")
-        .innerHTML =
+        document.getElementById(
+            "status"
+        ).innerHTML =
 
         `☣ Bem-vindo(a),
         ${usuarioAtual.nome}`;
@@ -143,44 +190,53 @@ async function entrarSistema(){
         // ONLINE
 
         await db.collection("ativos")
-        .doc(usuarioAtual.id)
+        .doc(usuarioAtual.docId)
         .set({
 
-            nome:usuarioAtual.nome,
+            nome:
+            usuarioAtual.nome,
 
-            id:usuarioAtual.id,
+            id:
+            usuarioAtual.id,
 
-            cargo:usuarioAtual.cargo,
+            cargo:
+            usuarioAtual.cargo,
 
             online:true,
 
             ultimoLogin:
-            new Date().toLocaleString()
+            new Date()
+            .toLocaleString()
         });
 
         // PRIMEIRO LOGIN
 
-        if(usuarioAtual.primeiroLogin){
+        if(
+            usuarioAtual.primeiroLogin
+        ){
 
             document.getElementById(
-            "trocarSenhaCard"
+                "trocarSenhaCard"
             ).style.display = "block";
         }
 
         // CHEFE
 
-        if(usuarioAtual.cargo === "chefe"){
+        if(
+            usuarioAtual.cargo
+            === "chefe"
+        ){
 
             document.getElementById(
-            "adminPanel"
+                "adminPanel"
             ).style.display = "block";
 
             document.getElementById(
-            "painelRealtime"
+                "painelRealtime"
             ).style.display = "block";
 
             document.getElementById(
-            "membrosPanel"
+                "membrosPanel"
             ).style.display = "block";
 
             iniciarRealtimePainel();
@@ -188,20 +244,17 @@ async function entrarSistema(){
             carregarMembros();
         }
 
+        console.log(
+            "LOGIN OK"
+        );
+
     }catch(error){
 
         console.error(error);
 
-        alert("Erro ao logar");
-
-    }finally{
-
-        const botao =
-        document.querySelector(".login-card button");
-
-        botao.disabled = false;
-
-        botao.innerText = "Entrar";
+        alert(
+            "Erro no login. Veja F12."
+        );
     }
 }
 
@@ -210,18 +263,23 @@ async function entrarSistema(){
 async function trocarSenha(){
 
     const novaSenha =
-    document.getElementById("novaSenha")
-    .value;
+    document.getElementById(
+        "novaSenha"
+    ).value;
 
     if(novaSenha.length < 4){
 
-        alert("Senha muito curta");
+        alert(
+            "Senha muito curta"
+        );
 
         return;
     }
 
     const senhaHash =
-    await gerarHash(novaSenha);
+    await gerarHash(
+        novaSenha
+    );
 
     await db.collection("usuarios")
     .doc(usuarioAtual.docId)
@@ -232,10 +290,12 @@ async function trocarSenha(){
         primeiroLogin:false
     });
 
-    alert("☣ Senha alterada");
+    alert(
+        "☣ Senha alterada"
+    );
 
     document.getElementById(
-    "trocarSenhaCard"
+        "trocarSenhaCard"
     ).style.display = "none";
 }
 
@@ -247,7 +307,8 @@ async function iniciarExpediente(){
 
     atualizarPreview();
 
-    inicioExpediente = new Date();
+    inicioExpediente =
+    new Date();
 
     intervalo =
     setInterval(
@@ -255,8 +316,9 @@ async function iniciarExpediente(){
         1000
     );
 
-    document.getElementById("status")
-    .innerHTML =
+    document.getElementById(
+        "status"
+    ).innerHTML =
 
     `🟢 Entrada:
     ${inicioExpediente.toLocaleTimeString()}`;
@@ -264,82 +326,120 @@ async function iniciarExpediente(){
 
 function atualizarTimer(){
 
-    const agora = new Date();
+    const agora =
+    new Date();
 
     const diff =
     agora - inicioExpediente;
 
     const horas =
-    Math.floor(diff / 3600000);
+    Math.floor(
+        diff / 3600000
+    );
 
     const minutos =
-    Math.floor((diff % 3600000)/60000);
+    Math.floor(
+        (diff % 3600000)
+        / 60000
+    );
 
     const segundos =
-    Math.floor((diff % 60000)/1000);
+    Math.floor(
+        (diff % 60000)
+        / 1000
+    );
 
-    document.getElementById("timer")
-    .innerText =
+    document.getElementById(
+        "timer"
+    ).innerText =
 
     `${String(horas).padStart(2,'0')}:${String(minutos).padStart(2,'0')}:${String(segundos).padStart(2,'0')}`;
 }
+
+// FINALIZAR
 
 async function finalizarExpediente(){
 
     clearInterval(intervalo);
 
-    const agora = new Date();
+    const agora =
+    new Date();
 
-    await db.collection("registros")
-    .add({
+    await db.collection(
+        "registros"
+    ).add({
 
-        nome:usuarioAtual.nome,
+        nome:
+        usuarioAtual.nome,
 
-        id:usuarioAtual.id,
+        id:
+        usuarioAtual.id,
 
-        cargo:usuarioAtual.cargo,
+        cargo:
+        usuarioAtual.cargo,
 
         entrada:
-        inicioExpediente.toLocaleTimeString(),
+        inicioExpediente
+        .toLocaleTimeString(),
 
         saida:
-        agora.toLocaleTimeString(),
+        agora
+        .toLocaleTimeString(),
 
         total:
-        document.getElementById("timer")
-        .innerText,
+        document.getElementById(
+            "timer"
+        ).innerText,
 
         data:
-        agora.toLocaleDateString(),
+        agora
+        .toLocaleDateString(),
 
         prints:imagens,
 
-        timestamp:Date.now()
+        timestamp:
+        Date.now()
     });
 
-    alert("☣ Expediente salvo");
+    alert(
+        "☣ Expediente salvo"
+    );
 }
 
 // PRINTS
 
 document
 .getElementById("upload")
-.addEventListener("change",(e)=>{
+.addEventListener(
+"change",
+(e)=>{
 
-    for(const file of e.target.files){
+    for(
+        const file
+        of e.target.files
+    ){
 
         processarImagem(file);
     }
 });
 
-document.addEventListener("paste",(event)=>{
+document.addEventListener(
+"paste",
+(event)=>{
 
     const items =
     event.clipboardData.items;
 
-    for(const item of items){
+    for(
+        const item
+        of items
+    ){
 
-        if(item.type.indexOf("image") !== -1){
+        if(
+            item.type.indexOf(
+                "image"
+            ) !== -1
+        ){
 
             processarImagem(
                 item.getAsFile()
@@ -353,9 +453,12 @@ function processarImagem(file){
     const reader =
     new FileReader();
 
-    reader.onload = function(e){
+    reader.onload =
+    function(e){
 
-        imagens.push(e.target.result);
+        imagens.push(
+            e.target.result
+        );
 
         atualizarPreview();
     }
@@ -366,366 +469,34 @@ function processarImagem(file){
 function atualizarPreview(){
 
     const container =
-    document.getElementById("previewContainer");
+    document.getElementById(
+        "previewContainer"
+    );
 
     container.innerHTML = "";
 
-    imagens.forEach((img,index)=>{
+    imagens.forEach(
+    (img,index)=>{
 
         const div =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
-        div.classList.add("preview-box");
+        div.classList.add(
+            "preview-box"
+        );
 
         div.innerHTML = `
 
-            <div class="preview-number">
-                #${index+1}
-            </div>
+        <div class="preview-number">
+            #${index+1}
+        </div>
 
-            <img src="${img}">
+        <img src="${img}">
 
         `;
 
         container.appendChild(div);
     });
-}
-
-// REALTIME
-
-function iniciarRealtimePainel(){
-
-    db.collection("registros")
-
-    .orderBy("timestamp","desc")
-
-    .onSnapshot(snapshot=>{
-
-        const lista =
-        document.getElementById("listaRealtime");
-
-        lista.innerHTML = "";
-
-        snapshot.forEach(doc=>{
-
-            const item = doc.data();
-
-            const card =
-            document.createElement("div");
-
-            card.classList.add("realtime-card");
-
-            let imagensHTML = "";
-
-            if(item.prints){
-
-                item.prints.forEach((img)=>{
-
-                    imagensHTML += `
-
-                    <img
-                    src="${img}"
-                    onclick="abrirImagem('${img}')">
-
-                    `;
-                });
-            }
-
-            card.innerHTML = `
-
-                <h3>
-                    👤 ${item.nome}
-                </h3>
-
-                <p>
-                    🪪 ${item.id}
-                </p>
-
-                <p>
-                    ⏱ ${item.total}
-                </p>
-
-                <p>
-                    📅 ${item.data}
-                </p>
-
-                <div class="prints-grid">
-
-                    ${imagensHTML}
-
-                </div>
-
-            `;
-
-            lista.appendChild(card);
-        });
-    });
-}
-
-// MEMBROS
-
-function carregarMembros(){
-
-    db.collection("usuarios")
-
-    .onSnapshot(async snapshot=>{
-
-        const lista =
-        document.getElementById("listaMembros");
-
-        lista.innerHTML = "";
-
-        const ativosSnapshot =
-        await db.collection("ativos").get();
-
-        const ativos = [];
-
-        ativosSnapshot.forEach(doc=>{
-
-            ativos.push(doc.data().id);
-        });
-
-        snapshot.forEach(doc=>{
-
-            const membro =
-            doc.data();
-
-            const online =
-            ativos.includes(membro.id);
-
-            const card =
-            document.createElement("div");
-
-            card.classList.add("membro-card");
-
-            card.innerHTML = `
-
-                <div class="${online ? 'online':'offline'}">
-
-                    ${online ?
-                    '🟢 ONLINE':
-                    '🔴 OFFLINE'}
-
-                </div>
-
-                <h3>
-                    👤 ${membro.nome}
-                </h3>
-
-                <p>
-                    🪪 ${membro.id}
-                </p>
-
-                <p>
-                    🎖 ${membro.cargo}
-                </p>
-
-                <div class="membro-actions">
-
-                    <button
-                    class="promover"
-                    onclick="promoverMembro('${doc.id}')">
-
-                    👑 Promover
-
-                    </button>
-
-                    <button
-                    class="remover"
-                    onclick="removerMembro('${doc.id}')">
-
-                    🗑 Remover
-
-                    </button>
-
-                </div>
-
-            `;
-
-            lista.appendChild(card);
-        });
-    });
-}
-
-// PROMOVER
-
-async function promoverMembro(docId){
-
-    await db.collection("usuarios")
-    .doc(docId)
-    .update({
-
-        cargo:"chefe"
-    });
-
-    alert("☣ Promovido");
-}
-
-// REMOVER
-
-async function removerMembro(docId){
-
-    const confirmar =
-    confirm("Remover membro?");
-
-    if(!confirmar) return;
-
-    await db.collection("usuarios")
-    .doc(docId)
-    .delete();
-
-    alert("☣ Removido");
-}
-
-// ADMIN
-
-async function adicionarCurandeiro(){
-
-    const nome =
-    document.getElementById("novoNome").value;
-
-    const id =
-    document.getElementById("novoID").value;
-
-    const senhaTemp =
-    Math.floor(
-        100000 + Math.random() * 900000
-    ).toString();
-
-    const senhaHash =
-    await gerarHash(senhaTemp);
-
-    await db.collection("usuarios")
-    .add({
-
-        nome,
-
-        id,
-
-        senha:senhaHash,
-
-        cargo:"curandeiro",
-
-        primeiroLogin:true
-    });
-
-    alert(
-
-        `☣ Curandeiro criado
-
-Senha provisória:
-${senhaTemp}`
-    );
-}
-
-// PDF
-
-async function gerarPDFSemanal(){
-
-    const container =
-    document.getElementById("pdfTemplate");
-
-    const printsDiv =
-    document.getElementById("pdfPrints");
-
-    printsDiv.innerHTML = "";
-
-    const snapshot =
-    await db.collection("registros")
-    .where("id","==",usuarioAtual.id)
-    .get();
-
-    snapshot.forEach(doc=>{
-
-        const item = doc.data();
-
-        if(item.prints){
-
-            item.prints.forEach((img,index)=>{
-
-                const div =
-                document.createElement("div");
-
-                div.classList.add("pdf-print");
-
-                div.innerHTML = `
-
-                    <img src="${img}">
-
-                    <span>
-                        Atendimento #${index+1}
-                    </span>
-
-                `;
-
-                printsDiv.appendChild(div);
-            });
-        }
-    });
-
-    document.getElementById("pdfNome")
-    .innerText =
-    usuarioAtual.nome;
-
-    const canvas =
-    await html2canvas(container,{
-
-        scale:2
-    });
-
-    const imgData =
-    canvas.toDataURL("image/png");
-
-    const { jsPDF } =
-    window.jspdf;
-
-    const pdf =
-    new jsPDF("p","mm","a4");
-
-    const pdfWidth =
-    pdf.internal.pageSize.getWidth();
-
-    const pdfHeight =
-    (canvas.height * pdfWidth)
-    / canvas.width;
-
-    pdf.addImage(
-
-        imgData,
-
-        "PNG",
-
-        0,
-
-        0,
-
-        pdfWidth,
-
-        pdfHeight
-    );
-
-    pdf.save(
-
-        `Relatorio_${usuarioAtual.nome}.pdf`
-    );
-}
-
-// MODAL
-
-function abrirImagem(src){
-
-    const modal =
-    document.createElement("div");
-
-    modal.classList.add("modal");
-
-    modal.innerHTML =
-    `<img src="${src}">`;
-
-    modal.onclick = ()=>{
-
-        modal.remove();
-    };
-
-    document.body.appendChild(modal);
 }
