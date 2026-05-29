@@ -430,7 +430,8 @@ gap:15px;
 
 /* ADMIN */
 
-#adminPanel{
+#adminPanel,
+#onlinePanel{
 
 max-width:100%;
 
@@ -494,13 +495,22 @@ transform:translateY(0);
 
 #listaRealtime,
 #listaLogs,
-#listaMembros{
+#listaMembros,
+#listaMembrosOnline{
 
 display:grid;
 
 gap:15px;
 
 margin-top:15px;
+
+}
+
+/* SCROLL ADMIN */
+
+#listaRealtime,
+#listaLogs,
+#listaMembros{
 
 max-height:420px;
 
@@ -510,7 +520,7 @@ padding-right:8px;
 
 }
 
-/* CARDS ADMIN */
+/* CARDS ADMIN / ONLINE */
 
 .realtime-card,
 .membro-card{
@@ -534,6 +544,9 @@ transform:translateY(-2px);
 
 border-color:
 rgba(157,255,99,.45);
+
+box-shadow:
+0 0 12px rgba(157,255,99,.18);
 
 }
 
@@ -578,6 +591,14 @@ font-weight:bold;
 
 text-shadow:
 0 0 8px #ff5555;
+
+}
+
+/* ONLINE GLOBAL */
+
+#listaMembrosOnline .membro-card{
+
+border-left:4px solid var(--green);
 
 }
 
