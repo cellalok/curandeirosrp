@@ -229,8 +229,21 @@ function abrirPainel(){
 document.querySelector(".login-card").style.display = "none";
 document.getElementById("painel").style.display = "block";
 
-document.getElementById("status").innerHTML =
-`☣ Bem-vindo(a), ${usuarioAtual.nome} - ${formatarCargo(usuarioAtual.cargo)}`;
+document.getElementById("status").innerHTML = `
+<div>
+<div style="font-size:24px;font-weight:bold;">
+${usuarioAtual.nome}
+</div>
+
+<div style="font-size:14px;color:#9dff63;margin-top:4px;">
+🎖 ${formatarCargo(usuarioAtual.cargo)}
+</div>
+
+<div style="font-size:13px;color:#7dff63;margin-top:6px;">
+🟢 Sistema conectado
+</div>
+</div>
+`;
 
 if(usuarioAtual.primeiroLogin){
 document.getElementById("trocarSenhaCard").style.display = "block";
