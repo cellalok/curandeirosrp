@@ -12,6 +12,7 @@ box-sizing:border-box;
 
 --green:#9dff63;
 --green-dark:#67d42a;
+
 --red:#ff4b4b;
 --blue:#46b4ff;
 
@@ -25,6 +26,10 @@ box-sizing:border-box;
 0 0 25px rgba(157,255,99,.08);
 
 }
+
+/* ==========================================
+   BODY
+========================================== */
 
 body{
 
@@ -445,6 +450,51 @@ gap:15px;
 }
 
 /* ==========================================
+   ADMIN TABS
+========================================== */
+
+.admin-tabs{
+
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+
+margin-bottom:20px;
+
+}
+
+.admin-tabs button{
+
+flex:1;
+min-width:140px;
+
+}
+
+/* ==========================================
+   ABAS ADMIN
+========================================== */
+
+.admin-aba{
+
+animation:fadeIn .25s ease;
+
+}
+
+@keyframes fadeIn{
+
+from{
+opacity:0;
+transform:translateY(10px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+
+/* ==========================================
    REALTIME
 ========================================== */
 
@@ -457,6 +507,12 @@ display:grid;
 gap:15px;
 
 margin-top:15px;
+
+max-height:650px;
+
+overflow-y:auto;
+
+padding-right:8px;
 
 }
 
@@ -494,18 +550,66 @@ opacity:.95;
 }
 
 /* ==========================================
-   MEMBROS
+   STATUS ONLINE
 ========================================== */
 
-.membro-card button{
+.status-online{
 
-margin-top:10px;
-margin-right:10px;
+color:#7dff63;
+
+font-weight:bold;
+
+text-shadow:
+0 0 8px #7dff63;
+
+}
+
+.status-offline{
+
+color:#ff5555;
+
+font-weight:bold;
+
+text-shadow:
+0 0 8px #ff5555;
 
 }
 
 /* ==========================================
-   TEXTO INFORMATIVO
+   MEMBROS
+========================================== */
+
+.membro-card{
+
+transition:.25s;
+
+}
+
+.membro-card:hover{
+
+transform:translateY(-3px);
+
+border-color:
+rgba(157,255,99,.45);
+
+}
+
+/* ==========================================
+   GERADOR FIREBASE
+========================================== */
+
+#firebaseResultado{
+
+font-family:monospace;
+
+font-size:13px;
+
+line-height:1.5;
+
+}
+
+/* ==========================================
+   TEXTO INFO
 ========================================== */
 
 .info-text{
@@ -592,9 +696,29 @@ button{
 width:100%;
 }
 
+.admin-tabs{
+
+flex-direction:column;
+
+}
+
+.admin-tabs button{
+
+width:100%;
+
+}
+
 #previewContainer{
 
 grid-template-columns:1fr;
+
+}
+
+#listaRealtime,
+#listaLogs,
+#listaMembros{
+
+max-height:none;
 
 }
 
