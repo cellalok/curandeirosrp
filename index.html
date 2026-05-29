@@ -22,9 +22,7 @@ rel="stylesheet">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <!-- PDF -->
@@ -88,6 +86,10 @@ style="display:none;">
 <h2>
 🔐 Alterar Senha
 </h2>
+
+<p class="info-text">
+Primeiro acesso detectado. Cadastre uma nova senha para continuar.
+</p>
 
 <input
 type="password"
@@ -254,16 +256,100 @@ style="display:none;">
 </h2>
 
 <p class="info-text">
-Cadastro, remoção e alteração de membros devem ser feitos pelo Firebase Console.
+Área administrativa liberada apenas para Luna Serenight.
 </p>
+
+<div class="admin-tabs">
+
+<button
+class="blue"
+onclick="mostrarAba('realtime')">
+
+🛰 Painel
+
+</button>
+
+<button
+class="blue"
+onclick="mostrarAba('logs')">
+
+📋 Logs
+
+</button>
+
+<button
+class="blue"
+onclick="mostrarAba('membros')">
+
+👥 Membros
+
+</button>
+
+<button
+class="green"
+id="btnAbaGerador"
+onclick="mostrarAba('gerador')"
+style="display:none;">
+
+🔑 Gerador
+
+</button>
 
 </div>
 
-<!-- GERADOR FIREBASE -->
+<!-- ABA REALTIME -->
 
 <div
-class="card"
-id="geradorFirebase"
+class="admin-aba"
+id="abaRealtime">
+
+<h2>
+🛰 Painel Administrativo
+</h2>
+
+<div id="listaRealtime"></div>
+
+</div>
+
+<!-- ABA LOGS -->
+
+<div
+class="admin-aba"
+id="abaLogs"
+style="display:none;">
+
+<h2>
+📋 Logs
+</h2>
+
+<div id="listaLogs"></div>
+
+</div>
+
+<!-- ABA MEMBROS -->
+
+<div
+class="admin-aba"
+id="abaMembros"
+style="display:none;">
+
+<h2>
+👥 Membros
+</h2>
+
+<p class="info-text">
+Status online/offline atualizado automaticamente a cada 30 segundos.
+</p>
+
+<div id="listaMembros"></div>
+
+</div>
+
+<!-- ABA GERADOR FIREBASE -->
+
+<div
+class="admin-aba"
+id="abaGerador"
 style="display:none;">
 
 <h2>
@@ -271,7 +357,7 @@ style="display:none;">
 </h2>
 
 <p class="info-text">
-Use esta ferramenta para gerar o hash da senha provisória. Depois cadastre o membro manualmente no Firebase Console.
+Use esta ferramenta apenas para gerar o hash da senha provisória. Depois cadastre o membro manualmente no Firebase Console.
 </p>
 
 <input
@@ -327,42 +413,6 @@ font-family:monospace;
 "></textarea>
 
 </div>
-
-<!-- PAINEL ADMIN -->
-
-<div
-class="card"
-id="painelRealtime"
-style="display:none;">
-
-<h2>
-🛰 Painel Administrativo
-</h2>
-
-<div id="listaRealtime"></div>
-
-<hr>
-
-<h2>
-📋 Logs
-</h2>
-
-<div id="listaLogs"></div>
-
-</div>
-
-<!-- MEMBROS -->
-
-<div
-class="card"
-id="membrosPanel"
-style="display:none;">
-
-<h2>
-👥 Membros
-</h2>
-
-<div id="listaMembros"></div>
 
 </div>
 
