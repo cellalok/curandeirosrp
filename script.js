@@ -28,7 +28,6 @@ const gerarPDFAutomatico = true;
 
 const ADMINS_NOMES = [
 "Luna Serenight"
-"Edu Mello"  
 // "Nome Do Novo Admin"
 ];
 
@@ -126,7 +125,22 @@ const snapshot = await db.collection("ativos")
 .where("id","==",id)
 .get();
 
-return !snapshot.empty;
+if(snapshot.empty) return false;
+
+const agora = Date.now();
+let loginAtivo = false;
+
+for(const doc of snapshot.docs){
+const dados = doc.data();
+
+if(dados.ultimoPing && agora - dados.ultimoPing <= 45000){
+loginAtivo = true;
+}else{
+await db.collection("ativos").doc(doc.id).delete();
+}
+}
+
+return loginAtivo;
 }
 
 // =========================
