@@ -1,247 +1,253 @@
-/* ==========================================
-   ADMIN E ONLINE
-========================================== */
+<!DOCTYPE html>
+<html lang="pt-BR">
 
-#adminPanel{
-max-width:100%;
-}
+<head>
 
-#onlinePanel{
-max-width:100%;
-}
+<meta charset="UTF-8">
 
-/* ==========================================
-   TABS ADMIN
-========================================== */
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-.admin-tabs{
+<title>☣ Sistema Curandeiros</title>
 
-display:flex;
-flex-wrap:wrap;
+<link rel="stylesheet" href="style.css">
 
-align-items:center;
-justify-content:flex-start;
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
-gap:10px;
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
-margin:15px 0 20px;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-}
+</head>
 
-.admin-tabs button{
+<body>
 
-flex:0 0 auto;
+<div class="container">
 
-min-width:130px;
+<header>
+<h1>☣ SISTEMA CURANDEIROS ☣</h1>
+<p>Painel Militar Pós-Apocalipse</p>
+</header>
 
-padding:12px 18px;
+<section class="login-card">
 
-font-size:14px;
+<h2>🔐 Login</h2>
 
-}
+<input type="text" id="idLogin" placeholder="ID">
 
-/* ==========================================
-   ABAS
-========================================== */
+<input type="password" id="senhaLogin" placeholder="Senha">
 
-.admin-aba{
+<button onclick="entrarSistema()">Entrar</button>
 
-display:block;
+</section>
 
-animation:fadeIn .25s ease;
+<div class="card" id="trocarSenhaCard" style="display:none;">
 
-margin-top:10px;
+<h2>🔐 Alterar Senha</h2>
 
-}
+<p class="info-text">
+Primeiro acesso detectado. Cadastre uma nova senha para continuar.
+</p>
 
-@keyframes fadeIn{
+<input type="password" id="novaSenha" placeholder="Nova senha">
 
-from{
-opacity:0;
-transform:translateY(8px);
-}
+<button class="blue" onclick="trocarSenha()">Salvar Nova Senha</button>
 
-to{
-opacity:1;
-transform:translateY(0);
-}
+</div>
 
-}
+<section id="painel" style="display:none;">
 
-/* ==========================================
-   LISTAS
-========================================== */
+<div class="card">
 
-#listaRealtime,
-#listaLogs,
-#listaMembros,
-#listaMembrosOnline{
+<h2>⏱ Controle de Expediente</h2>
 
-display:grid;
+<div class="buttons">
 
-gap:15px;
+<button class="green" onclick="iniciarExpediente()">▶ Entrada</button>
 
-margin-top:15px;
+<button class="red" onclick="finalizarExpediente()">■ Saída</button>
 
-}
+<button class="red" onclick="logout()">🚪 Sair</button>
 
-/* ==========================================
-   SCROLL ADMIN
-========================================== */
+</div>
 
-#listaRealtime,
-#listaLogs,
-#listaMembros{
+<div id="status"></div>
 
-max-height:420px;
+<div class="timer" id="timer">00:00:00</div>
 
-overflow-y:auto;
+</div>
 
-padding-right:8px;
+<div class="card" id="onlinePanel">
 
-}
+<h2>👥 Curandeiros Online</h2>
 
-/* ==========================================
-   CARDS
-========================================== */
+<p class="info-text">
+Status atualizado automaticamente a cada 30 segundos.
+</p>
 
-.realtime-card,
-.membro-card{
+<div id="listaMembrosOnline"></div>
 
-background:rgba(10,10,10,.82);
+</div>
 
-border:1px solid rgba(157,255,99,.18);
+<div class="card">
 
-border-radius:14px;
+<h2>📸 Prints</h2>
 
-padding:15px;
+<input type="file" id="upload" multiple accept="image/*">
 
-transition:.25s;
+<p class="info-text">
+CTRL + V para colar prints
+</p>
 
-}
+<div id="previewContainer"></div>
 
-.realtime-card:hover,
-.membro-card:hover{
+<button class="red" onclick="limparPrints()">🗑 Limpar Prints</button>
 
-transform:translateY(-2px);
+</div>
 
-border-color:
-rgba(157,255,99,.45);
+<div class="card">
 
-box-shadow:
-0 0 12px rgba(157,255,99,.18);
+<h2>📄 Relatórios Premium</h2>
 
-}
+<input type="date" id="dataRelatorio">
 
-.realtime-card h3,
-.membro-card h3{
+<select id="membroRelatorio">
+<option value="">Meu relatório</option>
+</select>
 
-color:var(--green);
+<button class="blue" onclick="gerarPDFDiario()">☣ Gerar PDF Premium</button>
 
-margin-bottom:8px;
+</div>
 
-}
+<div class="card">
 
-.realtime-card p,
-.membro-card p{
+<h2>📚 Histórico</h2>
 
-margin-bottom:6px;
+<input type="date" id="filtroHistorico">
 
-font-size:13px;
+<button class="blue" onclick="filtrarHistorico()">🔎 Filtrar</button>
 
-opacity:.95;
+<div id="historicoLista"></div>
 
-}
+</div>
 
-/* ==========================================
-   ONLINE / OFFLINE
-========================================== */
+<div class="card" id="adminPanel" style="display:none;">
 
-.status-online{
+<h2>👑 Administração</h2>
 
-color:#7dff63;
+<p class="info-text">
+Área administrativa liberada apenas para administradores autorizados.
+</p>
 
-font-weight:bold;
+<div class="admin-tabs">
 
-text-shadow:
-0 0 8px #7dff63;
+<button class="blue" onclick="mostrarAba('realtime')">🛰 Painel</button>
 
-}
+<button class="blue" onclick="mostrarAba('logs')">📋 Logs</button>
 
-.status-offline{
+<button class="blue" onclick="mostrarAba('membros')">👥 Membros</button>
 
-color:#ff5555;
+<button class="green" id="btnAbaGerador" onclick="mostrarAba('gerador')" style="display:none;">🔑 Gerador</button>
 
-font-weight:bold;
+</div>
 
-text-shadow:
-0 0 8px #ff5555;
+<div class="admin-aba" id="abaRealtime">
 
-}
+<h2>🛰 Painel Administrativo</h2>
 
-/* ==========================================
-   ONLINE GLOBAL
-========================================== */
+<div id="listaRealtime"></div>
 
-#listaMembrosOnline .membro-card{
+</div>
 
-border-left:4px solid var(--green);
+<div class="admin-aba" id="abaLogs" style="display:none;">
 
-}
+<h2>📋 Logs</h2>
 
-/* ==========================================
-   GERADOR / RESET SENHA
-========================================== */
+<div id="listaLogs"></div>
 
-#firebaseResultado,
-#resultadoResetSenha{
+</div>
 
-font-family:monospace;
+<div class="admin-aba" id="abaMembros" style="display:none;">
 
-font-size:13px;
+<h2>👥 Membros</h2>
 
-line-height:1.5;
+<p class="info-text">
+Status online/offline atualizado automaticamente a cada 30 segundos.
+</p>
 
-background:#0d0d0d;
+<div id="listaMembros"></div>
 
-color:#d7ffd9;
+</div>
 
-border:1px solid #2f472f;
+<div class="admin-aba" id="abaGerador" style="display:none;">
 
-}
+<h2>🔑 Gerador de Hash Firebase</h2>
 
-#resetUsuario{
+<p class="info-text">
+Use esta ferramenta apenas para gerar o hash da senha provisória. Depois cadastre o membro manualmente no Firebase Console.
+</p>
 
-margin-bottom:15px;
+<input type="text" id="firebaseNome" placeholder="Nome">
 
-}
+<input type="text" id="firebaseID" placeholder="ID">
 
-/* ==========================================
-   RESPONSIVO
-========================================== */
+<select id="firebaseCargo">
+<option value="curandeiro">Aprendiz Curandeiro</option>
+<option value="chefe">Mestre Curandeiro</option>
+</select>
 
-@media(max-width:768px){
+<input type="text" id="firebaseSenha" placeholder="Senha provisória">
 
-.admin-tabs{
+<button class="green" onclick="gerarUsuarioFirebase()">⚡ Gerar Hash</button>
 
-flex-direction:column;
+<textarea
+id="firebaseResultado"
+rows="12"
+readonly
+placeholder="O JSON para cadastrar no Firebase aparecerá aqui..."></textarea>
 
-}
+<hr>
 
-.admin-tabs button{
+<h2>🔁 Resetar Senha Provisória</h2>
 
-width:100%;
+<p class="info-text">
+Selecione um membro para gerar uma nova senha provisória. O membro deverá alterar a senha no próximo login.
+</p>
 
-min-width:unset;
+<select id="resetUsuario">
+<option value="">Selecione um membro</option>
+</select>
 
-}
+<button class="red" onclick="resetarSenhaUsuario()">🔁 Gerar Nova Senha</button>
 
-#listaRealtime,
-#listaLogs,
-#listaMembros{
+<textarea
+id="resultadoResetSenha"
+rows="8"
+readonly
+placeholder="A nova senha provisória aparecerá aqui..."></textarea>
 
-max-height:none;
+</div>
 
-}
+</div>
 
-}
+</section>
+
+</div>
+
+<div
+id="pdfTemplate"
+style="
+display:none;
+position:absolute;
+left:-99999px;
+top:0;
+">
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
