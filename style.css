@@ -1,32 +1,58 @@
-*{
+/* ==========================================
+   SISTEMA CURANDEIROS - FIVE M RP PREMIUM
+========================================== */
 
+*{
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Arial, Helvetica, sans-serif;
+}
+
+:root{
+
+--green:#9dff63;
+--green-dark:#67d42a;
+--red:#ff4b4b;
+--blue:#46b4ff;
+
+--bg-card:rgba(0,0,0,.68);
+--bg-card-2:rgba(10,10,10,.82);
+
+--border:rgba(157,255,99,.28);
+
+--shadow:
+0 0 10px rgba(157,255,99,.18),
+0 0 25px rgba(157,255,99,.08);
 
 }
 
 body{
 
+font-family:'Orbitron',sans-serif;
+
 background:
 linear-gradient(
 rgba(0,0,0,.82),
-rgba(0,0,0,.92)),
+rgba(0,0,0,.92)
+),
 
-url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1974&auto=format&fit=crop');
+url("https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1920&auto=format&fit=crop");
 
 background-size:cover;
 background-position:center;
 background-attachment:fixed;
 
-color:white;
+color:#fff;
 
 min-height:100vh;
 
 padding:30px;
 
 }
+
+/* ==========================================
+   CONTAINER
+========================================== */
 
 .container{
 
@@ -35,87 +61,194 @@ margin:auto;
 
 }
 
+/* ==========================================
+   HEADER
+========================================== */
+
 header{
 
 text-align:center;
-margin-bottom:35px;
+
+padding:30px;
+
+margin-bottom:25px;
+
+border:1px solid var(--border);
+
+border-radius:20px;
+
+background:rgba(0,0,0,.55);
+
+backdrop-filter:blur(8px);
+
+box-shadow:var(--shadow);
 
 }
 
 header h1{
 
-font-size:52px;
-color:#9cff57;
+font-size:34px;
+
+color:var(--green);
+
+text-shadow:
+0 0 10px var(--green),
+0 0 25px var(--green);
+
 margin-bottom:10px;
 
 }
 
 header p{
 
-opacity:.8;
-font-size:18px;
+opacity:.85;
+font-size:14px;
 
 }
 
-.login-card,
-.card{
+/* ==========================================
+   CARDS
+========================================== */
 
-background:rgba(12,18,22,.94);
+.card,
+.login-card{
 
-border-radius:22px;
+background:var(--bg-card);
 
-padding:30px;
+backdrop-filter:blur(10px);
 
-margin-bottom:25px;
+border:1px solid var(--border);
 
-border:1px solid rgba(255,255,255,.08);
+border-radius:20px;
 
-box-shadow:0 0 25px rgba(0,0,0,.35);
-
-}
-
-.card h2{
+padding:25px;
 
 margin-bottom:20px;
-color:#9cff57;
+
+box-shadow:var(--shadow);
+
+position:relative;
+
+overflow:hidden;
 
 }
 
-input{
+.card::before,
+.login-card::before{
+
+content:"";
+
+position:absolute;
+
+top:0;
+left:0;
+
+width:100%;
+height:3px;
+
+background:
+linear-gradient(
+90deg,
+transparent,
+var(--green),
+transparent
+);
+
+box-shadow:
+0 0 10px var(--green);
+
+}
+
+.card h2,
+.login-card h2{
+
+margin-bottom:20px;
+
+color:var(--green);
+
+font-size:20px;
+
+}
+
+/* ==========================================
+   INPUTS
+========================================== */
+
+input,
+select,
+textarea{
 
 width:100%;
 
-padding:15px;
+padding:14px;
 
-margin-bottom:15px;
-
-border:none;
+margin-bottom:12px;
 
 border-radius:12px;
 
-background:#10181d;
+border:1px solid #2f472f;
 
-color:white;
+background:#111;
 
-font-size:16px;
+color:#fff;
+
+font-family:'Orbitron',sans-serif;
+
+outline:none;
+
+transition:.25s;
+
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+
+border-color:var(--green);
+
+box-shadow:
+0 0 10px rgba(157,255,99,.35);
+
+}
+
+textarea{
+
+resize:vertical;
+min-height:180px;
+
+}
+
+/* ==========================================
+   BOTÕES
+========================================== */
+
+.buttons{
+
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+
+margin-bottom:15px;
 
 }
 
 button{
 
-padding:14px 20px;
+cursor:pointer;
+
+padding:14px 18px;
 
 border:none;
 
 border-radius:12px;
 
-cursor:pointer;
-
 font-weight:bold;
 
-transition:.2s;
+font-family:'Orbitron',sans-serif;
 
-margin-right:10px;
+transition:.25s;
+
+color:#fff;
 
 }
 
@@ -125,58 +258,128 @@ transform:translateY(-2px);
 
 }
 
-.green{
+button.green{
 
-background:#58db71;
+background:
+linear-gradient(
+135deg,
+#7dfc3d,
+#48b718
+);
+
+box-shadow:
+0 0 10px rgba(125,252,61,.4);
+
+}
+
+button.red{
+
+background:
+linear-gradient(
+135deg,
+#ff5d5d,
+#c51b1b
+);
+
+box-shadow:
+0 0 10px rgba(255,93,93,.4);
 
 }
 
-.red{
+button.blue{
 
-background:#ff6262;
-color:white;
+background:
+linear-gradient(
+135deg,
+#5bc7ff,
+#007ee8
+);
+
+box-shadow:
+0 0 10px rgba(91,199,255,.4);
 
 }
 
-.blue{
+.login-card button{
 
-background:#4d91ff;
-color:white;
+width:100%;
+
+background:
+linear-gradient(
+135deg,
+#7dfc3d,
+#48b718
+);
 
 }
+
+/* ==========================================
+   STATUS
+========================================== */
+
+#status{
+
+margin-top:10px;
+
+padding:12px;
+
+border-radius:12px;
+
+background:rgba(157,255,99,.08);
+
+border:1px solid rgba(157,255,99,.25);
+
+}
+
+/* ==========================================
+   TIMER
+========================================== */
 
 .timer{
 
-margin-top:20px;
-
-font-size:52px;
-
-text-align:center;
-
-color:#9cff57;
+font-size:38px;
 
 font-weight:bold;
 
+text-align:center;
+
+margin-top:20px;
+
+color:var(--green);
+
+text-shadow:
+0 0 12px var(--green);
+
 }
+
+/* ==========================================
+   PRINTS
+========================================== */
 
 #previewContainer{
 
 display:grid;
 
 grid-template-columns:
-repeat(auto-fill,minmax(180px,1fr));
+repeat(auto-fill,minmax(220px,1fr));
 
-gap:18px;
+gap:15px;
 
-margin-top:25px;
+margin-top:20px;
 
 }
 
 .preview-box{
 
-position:relative;
+background:rgba(0,0,0,.55);
 
-border-radius:16px;
+border:1px solid rgba(157,255,99,.2);
+
+border-radius:15px;
+
+padding:10px;
+
+position:relative;
 
 overflow:hidden;
 
@@ -185,10 +388,11 @@ overflow:hidden;
 .preview-box img{
 
 width:100%;
-
 height:180px;
 
 object-fit:cover;
+
+border-radius:10px;
 
 }
 
@@ -196,211 +400,202 @@ object-fit:cover;
 
 position:absolute;
 
-top:10px;
-left:10px;
+top:8px;
+left:8px;
 
-background:#9cff57;
+background:rgba(0,0,0,.85);
 
-color:black;
-
-padding:5px 12px;
+padding:6px 10px;
 
 border-radius:8px;
 
-font-weight:bold;
+font-size:12px;
+
+color:var(--green);
 
 }
 
+.remove-print{
+
+position:absolute;
+
+top:8px;
+right:8px;
+
+padding:6px 10px;
+
+background:#c51b1b;
+
+font-size:12px;
+
+}
+
+/* ==========================================
+   HISTÓRICO
+========================================== */
+
+#historicoLista{
+
+margin-top:20px;
+
+display:grid;
+
+gap:15px;
+
+}
+
+/* ==========================================
+   REALTIME
+========================================== */
+
 #listaRealtime,
+#listaLogs,
 #listaMembros{
 
 display:grid;
 
-grid-template-columns:
-repeat(auto-fill,minmax(320px,1fr));
+gap:15px;
 
-gap:20px;
-
-margin-top:25px;
+margin-top:15px;
 
 }
 
 .realtime-card,
 .membro-card{
 
-background:#11191f;
+background:var(--bg-card-2);
 
-padding:25px;
+border:1px solid rgba(157,255,99,.18);
 
-border-radius:20px;
+border-radius:14px;
 
-border:1px solid rgba(255,255,255,.08);
+padding:15px;
 
 }
 
-.online{
+.realtime-card h3,
+.membro-card h3{
 
-background:#58db71;
-color:black;
+color:var(--green);
 
-padding:6px 12px;
+margin-bottom:8px;
 
-border-radius:8px;
+}
 
-display:inline-block;
+.realtime-card p,
+.membro-card p{
+
+margin-bottom:6px;
 
 font-size:13px;
 
-font-weight:bold;
-
-margin-bottom:15px;
+opacity:.95;
 
 }
 
-.offline{
+/* ==========================================
+   MEMBROS
+========================================== */
 
-background:#ff6262;
-color:white;
+.membro-card button{
 
-padding:6px 12px;
+margin-top:10px;
+margin-right:10px;
 
-border-radius:8px;
+}
 
-display:inline-block;
+/* ==========================================
+   TEXTO INFORMATIVO
+========================================== */
+
+.info-text{
+
+opacity:.75;
 
 font-size:13px;
 
-font-weight:bold;
+margin-bottom:12px;
 
-margin-bottom:15px;
-
-}
-
-.prints-grid{
-
-display:grid;
-
-grid-template-columns:
-repeat(auto-fill,minmax(100px,1fr));
-
-gap:12px;
-
-margin-top:20px;
+line-height:1.5;
 
 }
 
-.prints-grid img{
+/* ==========================================
+   HR
+========================================== */
 
-width:100%;
-height:100px;
+hr{
 
-object-fit:cover;
+margin:20px 0;
 
-border-radius:12px;
+border:none;
 
-cursor:pointer;
-
-}
-
-.membro-actions{
-
-display:flex;
-
-gap:10px;
-
-margin-top:18px;
-
-}
-
-.promover{
-
-background:#4d91ff;
-color:white;
-
-}
-
-.remover{
-
-background:#ff6262;
-color:white;
-
-}
-
-#pdfTemplate{
-
-width:1200px;
-
-min-height:1600px;
-
-position:absolute;
-
-left:-99999px;
-
-top:0;
-
-padding:50px;
+height:1px;
 
 background:
 linear-gradient(
-rgba(0,0,0,.82),
-rgba(0,0,0,.92)),
-
-url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1974&auto=format&fit=crop');
-
-background-size:cover;
-
-color:white;
+90deg,
+transparent,
+rgba(157,255,99,.4),
+transparent
+);
 
 }
 
-.pdf-header{
+/* ==========================================
+   SCROLLBAR
+========================================== */
 
-text-align:center;
+::-webkit-scrollbar{
 
-margin-bottom:40px;
-
-}
-
-#pdfPrints{
-
-display:grid;
-
-grid-template-columns:
-repeat(3,1fr);
-
-gap:25px;
+width:10px;
 
 }
 
-.pdf-print{
+::-webkit-scrollbar-track{
 
-background:rgba(0,0,0,.55);
-
-border-radius:18px;
-
-overflow:hidden;
+background:#111;
 
 }
 
-.pdf-print img{
+::-webkit-scrollbar-thumb{
 
+background:var(--green);
+
+border-radius:20px;
+
+}
+
+/* ==========================================
+   RESPONSIVO
+========================================== */
+
+@media(max-width:768px){
+
+body{
+padding:15px;
+}
+
+header h1{
+font-size:24px;
+}
+
+.timer{
+font-size:28px;
+}
+
+.buttons{
+flex-direction:column;
+}
+
+button{
 width:100%;
-height:260px;
-
-object-fit:cover;
-
 }
 
-.pdf-print span{
+#previewContainer{
 
-display:block;
+grid-template-columns:1fr;
 
-padding:14px;
-
-text-align:center;
-
-font-size:22px;
-
-color:#9cff57;
+}
 
 }
