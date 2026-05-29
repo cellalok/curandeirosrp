@@ -1,17 +1,11 @@
 const firebaseConfig = {
-
-apiKey: "SUA_API_KEY",
-
-authDomain: "SEU_DOMINIO.firebaseapp.com",
-
-projectId: "SEU_PROJECT_ID",
-
-storageBucket: "SEU_BUCKET.appspot.com",
-
-messagingSenderId: "SEU_ID",
-
-appId: "SEU_APP_ID"
-
+  apiKey: "AIzaSyDobXJ_knDYZpmPAoktRzEU8U3GGB6t3cI",
+  authDomain: "painel-curandeiros.firebaseapp.com",
+  databaseURL: "https://painel-curandeiros-default-rtdb.firebaseio.com",
+  projectId: "painel-curandeiros",
+  storageBucket: "painel-curandeiros.firebasestorage.app",
+  messagingSenderId: "1069159942082",
+  appId: "1:1069159942082:web:d77a35c46d68849f2db85b"
 };
 
 firebase.initializeApp(firebaseConfig);
