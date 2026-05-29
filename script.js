@@ -18,7 +18,11 @@ let intervalo = null;
 let heartbeatInterval = null;
 let imagens = [];
 
+let usuariosCache = [];
+let ativosCache = {};
+
 const gerarPDFAutomatico = true;
+const ADMIN_NOME = "Luna Serenight";
 
 // =========================
 // HASH
@@ -53,6 +57,10 @@ const minutos = parseInt(partes[1] || 0);
 const segundos = parseInt(partes[2] || 0);
 
 return `${horas}h ${minutos}min ${segundos}s`;
+}
+
+function usuarioEhAdmin(){
+return usuarioAtual && usuarioAtual.nome === ADMIN_NOME;
 }
 
 // =========================
@@ -107,6 +115,8 @@ return !snapshot.empty;
 
 function iniciarHeartbeat(){
 atualizarHeartbeat();
+
+clearInterval(heartbeatInterval);
 
 heartbeatInterval = setInterval(()=>{
 atualizarHeartbeat();
@@ -211,16 +221,58 @@ alert("Primeiro acesso detectado.\n\nAltere sua senha provisória antes de conti
 },500);
 }
 
-if(usuarioAtual.cargo === "chefe"){
+if(usuarioEhAdmin()){
 document.getElementById("adminPanel").style.display = "block";
-document.getElementById("geradorFirebase").style.display = "block";
-document.getElementById("painelRealtime").style.display = "block";
-document.getElementById("membrosPanel").style.display = "block";
+
+const btnGerador = document.getElementById("btnAbaGerador");
+
+if(btnGerador){
+btnGerador.style.display = "block";
+}
 
 iniciarRealtimePainel();
-carregarMembros();
 carregarLogs();
+carregarMembros();
 carregarSelectMembros();
+mostrarAba("realtime");
+}
+}
+
+// =========================
+// ABAS ADMIN
+// =========================
+
+function mostrarAba(nome){
+const abas = [
+"abaRealtime",
+"abaLogs",
+"abaMembros",
+"abaGerador"
+];
+
+abas.forEach(id=>{
+const elemento = document.getElementById(id);
+
+if(elemento){
+elemento.style.display = "none";
+}
+});
+
+if(nome === "realtime"){
+document.getElementById("abaRealtime").style.display = "block";
+}
+
+if(nome === "logs"){
+document.getElementById("abaLogs").style.display = "block";
+}
+
+if(nome === "membros"){
+document.getElementById("abaMembros").style.display = "block";
+renderizarMembros();
+}
+
+if(nome === "gerador" && usuarioEhAdmin()){
+document.getElementById("abaGerador").style.display = "block";
 }
 }
 
@@ -243,6 +295,7 @@ alert("A senha deve ter no mínimo 6 caracteres");
 return;
 }
 
+try{
 const senhaHash = await gerarHash(novaSenha);
 
 await db.collection("usuarios")
@@ -261,6 +314,11 @@ salvarSessao();
 alert("Senha alterada com sucesso!");
 
 document.getElementById("trocarSenhaCard").style.display = "none";
+
+}catch(error){
+console.error(error);
+alert("Erro ao alterar senha. Verifique as regras do Firebase.");
+}
 }
 
 // =========================
@@ -268,6 +326,11 @@ document.getElementById("trocarSenhaCard").style.display = "none";
 // =========================
 
 async function gerarUsuarioFirebase(){
+if(!usuarioEhAdmin()){
+alert("Apenas Luna Serenight pode usar esta ferramenta.");
+return;
+}
+
 const nome = document.getElementById("firebaseNome").value.trim();
 const id = document.getElementById("firebaseID").value.trim();
 const cargo = document.getElementById("firebaseCargo").value;
@@ -746,6 +809,8 @@ timestamp:Date.now()
 }
 
 function carregarLogs(){
+if(!usuarioEhAdmin()) return;
+
 db.collection("logs")
 .orderBy("timestamp","desc")
 .onSnapshot(snapshot=>{
@@ -778,6 +843,8 @@ lista.appendChild(div);
 // =========================
 
 function iniciarRealtimePainel(){
+if(!usuarioEhAdmin()) return;
+
 db.collection("registros")
 .orderBy("timestamp","desc")
 .onSnapshot(snapshot=>{
@@ -799,6 +866,7 @@ card.innerHTML = `
 <p>📅 ${item.data}</p>
 <p>⏱ ${item.total}</p>
 <p>${item.entrada} - ${item.saida}</p>
+<p>📸 Atendimentos: ${(item.prints || []).length}</p>
 `;
 
 lista.appendChild(card);
@@ -824,7 +892,7 @@ lista.innerHTML = "";
 let query = db.collection("registros")
 .where("data","==",data);
 
-if(usuarioAtual.cargo !== "chefe"){
+if(!usuarioEhAdmin()){
 query = query.where("id","==",usuarioAtual.id);
 }
 
@@ -856,20 +924,60 @@ lista.appendChild(card);
 }
 
 // =========================
-// MEMBROS
+// MEMBROS ONLINE/OFFLINE
 // =========================
 
 function carregarMembros(){
+if(!usuarioEhAdmin()) return;
+
 db.collection("usuarios")
 .onSnapshot(snapshot=>{
+usuariosCache = [];
+
+snapshot.forEach(doc=>{
+usuariosCache.push({
+docId:doc.id,
+...doc.data()
+});
+});
+
+renderizarMembros();
+});
+
+db.collection("ativos")
+.onSnapshot(snapshot=>{
+ativosCache = {};
+
+snapshot.forEach(doc=>{
+const ativo = doc.data();
+
+ativosCache[ativo.id] = ativo;
+});
+
+renderizarMembros();
+});
+
+setInterval(()=>{
+renderizarMembros();
+},30000);
+}
+
+function renderizarMembros(){
 const lista = document.getElementById("listaMembros");
 
-if(!lista) return;
+if(!lista || !usuariosCache.length) return;
 
 lista.innerHTML = "";
 
-snapshot.forEach(doc=>{
-const membro = doc.data();
+const agora = Date.now();
+
+usuariosCache.forEach(membro=>{
+const ativo = ativosCache[membro.id];
+
+const online =
+ativo &&
+ativo.ultimoPing &&
+agora - ativo.ultimoPing <= 45000;
 
 const card = document.createElement("div");
 
@@ -880,10 +988,15 @@ card.innerHTML = `
 <p>${formatarCargo(membro.cargo)}</p>
 <p>ID: ${membro.id}</p>
 <p>Primeiro login: ${membro.primeiroLogin ? "Sim" : "Não"}</p>
+
+<p>
+<span class="${online ? "status-online" : "status-offline"}">
+● ${online ? "ONLINE" : "OFFLINE"}
+</span>
+</p>
 `;
 
 lista.appendChild(card);
-});
 });
 }
 
@@ -901,6 +1014,8 @@ select.innerHTML = `
 Meu relatório
 </option>
 `;
+
+if(!usuarioEhAdmin()) return;
 
 const snapshot = await db.collection("usuarios").get();
 
