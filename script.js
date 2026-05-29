@@ -1,502 +1,939 @@
 const firebaseConfig = {
-
-    apiKey: "AIzaSyDobXJ_knDYZpmPAoktRzEU8U3GGB6t3cI",
-
-    authDomain: "painel-curandeiros.firebaseapp.com",
-
-    databaseURL: "https://painel-curandeiros-default-rtdb.firebaseio.com",
-    
-    projectId: "https://painel-curandeiros-default-rtdb.firebaseio.com",
-    
-    storageBucket: "painel-curandeiros.firebasestorage.app",
-
-    messagingSenderId: "1069159942082",
-
-    appId: "1:1069159942082:web:d77a35c46d68849f2db85b"
-
+apiKey: "AIzaSyDobXJ_knDYZpmPAoktRzEU8U3GGB6t3cI",
+authDomain: "painel-curandeiros.firebaseapp.com",
+projectId: "painel-curandeiros",
+storageBucket: "painel-curandeiros.firebasestorage.app",
+messagingSenderId: "1069159942082",
+appId: "1:1069159942082:web:d77a35c46d68849f2db85b"
 };
 
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 let usuarioAtual = null;
-
 let inicioExpediente = null;
-
-let intervalo;
-
+let intervalo = null;
+let heartbeatInterval = null;
 let imagens = [];
 
+const gerarPDFAutomatico = true;
+
+// =========================
 // HASH
+// =========================
 
 async function gerarHash(texto){
+const encoder = new TextEncoder();
+const data = encoder.encode(texto);
+const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+const hashArray = Array.from(new Uint8Array(hashBuffer));
 
-    const encoder = new TextEncoder();
-
-    const data = encoder.encode(texto);
-
-    const hashBuffer =
-    await crypto.subtle.digest(
-        "SHA-256",
-        data
-    );
-
-    const hashArray =
-    Array.from(
-        new Uint8Array(hashBuffer)
-    );
-
-    return hashArray
-    .map(b =>
-        b.toString(16).padStart(2,"0"))
-    .join("");
+return hashArray
+.map(b => b.toString(16).padStart(2,"0"))
+.join("");
 }
 
+// =========================
+// FORMATAR
+// =========================
+
+function formatarCargo(cargo){
+return cargo === "chefe" ? "Mestre Curandeiro" : "Aprendiz Curandeiro";
+}
+
+function formatarTempo(tempo){
+if(!tempo) return "0h 0min 0s";
+
+const partes = tempo.split(":");
+
+const horas = parseInt(partes[0] || 0);
+const minutos = parseInt(partes[1] || 0);
+const segundos = parseInt(partes[2] || 0);
+
+return `${horas}h ${minutos}min ${segundos}s`;
+}
+
+// =========================
+// SESSÃO
+// =========================
+
+function salvarSessao(){
+localStorage.setItem("curandeiroLogado", JSON.stringify(usuarioAtual));
+}
+
+function restaurarSessao(){
+const sessao = localStorage.getItem("curandeiroLogado");
+
+if(!sessao) return;
+
+usuarioAtual = JSON.parse(sessao);
+
+abrirPainel();
+iniciarHeartbeat();
+}
+
+async function logout(){
+try{
+if(usuarioAtual){
+await db.collection("ativos")
+.doc(usuarioAtual.docId)
+.delete();
+}
+}catch(err){
+console.error(err);
+}
+
+localStorage.removeItem("curandeiroLogado");
+location.reload();
+}
+
+// =========================
+// LOGIN DUPLO
+// =========================
+
+async function verificarLoginDuplicado(id){
+const snapshot = await db.collection("ativos")
+.where("id","==",id)
+.get();
+
+return !snapshot.empty;
+}
+
+// =========================
+// HEARTBEAT
+// =========================
+
+function iniciarHeartbeat(){
+atualizarHeartbeat();
+
+heartbeatInterval = setInterval(()=>{
+atualizarHeartbeat();
+},30000);
+}
+
+async function atualizarHeartbeat(){
+if(!usuarioAtual) return;
+
+await db.collection("ativos")
+.doc(usuarioAtual.docId)
+.set({
+nome:usuarioAtual.nome,
+id:usuarioAtual.id,
+cargo:usuarioAtual.cargo,
+ultimoPing:Date.now()
+});
+}
+
+// =========================
 // LOGIN
+// =========================
 
 async function entrarSistema(){
+try{
+const idDigitado = document.getElementById("idLogin")
+.value
+.trim()
+.toUpperCase();
 
-    try{
+const senhaDigitada = document.getElementById("senhaLogin")
+.value
+.trim();
 
-        const idDigitado =
-        document.getElementById("idLogin")
-        .value
-        .trim()
-        .toUpperCase();
+const snapshot = await db.collection("usuarios").get();
 
-        const senhaDigitada =
-        document.getElementById("senhaLogin")
-        .value
-        .trim();
+let usuarioEncontrado = null;
 
-        console.log(
-            "Tentando login:",
-            idDigitado
-        );
+snapshot.forEach(doc=>{
+const dados = doc.data();
 
-        // BUSCA TODOS
+const idBanco = (dados.id || "")
+.toString()
+.trim()
+.toUpperCase();
 
-        const snapshot =
-        await db.collection("usuarios")
-        .get();
+if(idBanco === idDigitado){
+usuarioEncontrado = {
+...dados,
+docId:doc.id
+};
+}
+});
 
-        console.log(
-            "Usuários encontrados:",
-            snapshot.size
-        );
-
-        let usuarioEncontrado = null;
-
-        snapshot.forEach(doc=>{
-
-            const dados = doc.data();
-
-            console.log(
-                "Documento:",
-                dados
-            );
-
-            // TENTA TODOS OS CAMPOS POSSÍVEIS
-
-            const idBanco =
-
-                (
-                    dados.id ||
-                    dados.ID ||
-                    dados.Id ||
-                    dados.userId ||
-                    ""
-                )
-
-                .toString()
-                .trim()
-                .toUpperCase();
-
-            console.log(
-                "ID banco:",
-                idBanco
-            );
-
-            if(idBanco === idDigitado){
-
-                usuarioEncontrado = {
-
-                    ...dados,
-
-                    docId:doc.id
-                };
-            }
-        });
-
-        if(!usuarioEncontrado){
-
-            alert(
-                "ID inválido"
-            );
-
-            return;
-        }
-
-        // HASH
-
-        const senhaHash =
-        await gerarHash(
-            senhaDigitada
-        );
-
-        console.log(
-            "Hash digitado:",
-            senhaHash
-        );
-
-        console.log(
-            "Hash banco:",
-            usuarioEncontrado.senha
-        );
-
-        if(
-            usuarioEncontrado.senha
-            !== senhaHash
-        ){
-
-            alert(
-                "Senha inválida"
-            );
-
-            return;
-        }
-
-        usuarioAtual =
-        usuarioEncontrado;
-
-        // LOGIN OK
-
-        document.querySelector(
-            ".login-card"
-        ).style.display = "none";
-
-        document.getElementById(
-            "painel"
-        ).style.display = "block";
-
-        document.getElementById(
-            "status"
-        ).innerHTML =
-
-        `☣ Bem-vindo(a),
-        ${usuarioAtual.nome}`;
-
-        // ONLINE
-
-        await db.collection("ativos")
-        .doc(usuarioAtual.docId)
-        .set({
-
-            nome:
-            usuarioAtual.nome,
-
-            id:
-            usuarioAtual.id,
-
-            cargo:
-            usuarioAtual.cargo,
-
-            online:true,
-
-            ultimoLogin:
-            new Date()
-            .toLocaleString()
-        });
-
-        // PRIMEIRO LOGIN
-
-        if(
-            usuarioAtual.primeiroLogin
-        ){
-
-            document.getElementById(
-                "trocarSenhaCard"
-            ).style.display = "block";
-        }
-
-        // CHEFE
-
-        if(
-            usuarioAtual.cargo
-            === "chefe"
-        ){
-
-            document.getElementById(
-                "adminPanel"
-            ).style.display = "block";
-
-            document.getElementById(
-                "painelRealtime"
-            ).style.display = "block";
-
-            document.getElementById(
-                "membrosPanel"
-            ).style.display = "block";
-
-            iniciarRealtimePainel();
-
-            carregarMembros();
-        }
-
-        console.log(
-            "LOGIN OK"
-        );
-
-    }catch(error){
-
-        console.error(error);
-
-        alert(
-            "Erro no login. Veja F12."
-        );
-    }
+if(!usuarioEncontrado){
+alert("ID inválido");
+return;
 }
 
+const jaLogado = await verificarLoginDuplicado(usuarioEncontrado.id);
+
+if(jaLogado){
+alert("Usuário já está online");
+return;
+}
+
+const senhaHash = await gerarHash(senhaDigitada);
+
+if(usuarioEncontrado.senha !== senhaHash){
+alert("Senha inválida");
+return;
+}
+
+usuarioAtual = usuarioEncontrado;
+
+salvarSessao();
+abrirPainel();
+iniciarHeartbeat();
+
+}catch(error){
+console.error(error);
+alert("Erro no login");
+}
+}
+
+// =========================
+// PAINEL
+// =========================
+
+function abrirPainel(){
+document.querySelector(".login-card").style.display = "none";
+document.getElementById("painel").style.display = "block";
+
+document.getElementById("status").innerHTML =
+`☣ Bem-vindo(a), ${usuarioAtual.nome} - ${formatarCargo(usuarioAtual.cargo)}`;
+
+if(usuarioAtual.primeiroLogin){
+document.getElementById("trocarSenhaCard").style.display = "block";
+
+setTimeout(()=>{
+alert("Primeiro acesso detectado.\n\nAltere sua senha provisória antes de continuar.");
+},500);
+}
+
+if(usuarioAtual.cargo === "chefe"){
+document.getElementById("adminPanel").style.display = "block";
+document.getElementById("geradorFirebase").style.display = "block";
+document.getElementById("painelRealtime").style.display = "block";
+document.getElementById("membrosPanel").style.display = "block";
+
+iniciarRealtimePainel();
+carregarMembros();
+carregarLogs();
+carregarSelectMembros();
+}
+}
+
+// =========================
 // TROCAR SENHA
+// =========================
 
 async function trocarSenha(){
+const novaSenha = document.getElementById("novaSenha")
+.value
+.trim();
 
-    const novaSenha =
-    document.getElementById(
-        "novaSenha"
-    ).value;
-
-    if(novaSenha.length < 4){
-
-        alert(
-            "Senha muito curta"
-        );
-
-        return;
-    }
-
-    const senhaHash =
-    await gerarHash(
-        novaSenha
-    );
-
-    await db.collection("usuarios")
-    .doc(usuarioAtual.docId)
-    .update({
-
-        senha:senhaHash,
-
-        primeiroLogin:false
-    });
-
-    alert(
-        "☣ Senha alterada"
-    );
-
-    document.getElementById(
-        "trocarSenhaCard"
-    ).style.display = "none";
+if(!novaSenha){
+alert("Digite uma senha");
+return;
 }
 
+if(novaSenha.length < 6){
+alert("A senha deve ter no mínimo 6 caracteres");
+return;
+}
+
+const senhaHash = await gerarHash(novaSenha);
+
+await db.collection("usuarios")
+.doc(usuarioAtual.docId)
+.update({
+senha:senhaHash,
+primeiroLogin:false,
+senhaAlteradaEm:Date.now()
+});
+
+usuarioAtual.senha = senhaHash;
+usuarioAtual.primeiroLogin = false;
+
+salvarSessao();
+
+alert("Senha alterada com sucesso!");
+
+document.getElementById("trocarSenhaCard").style.display = "none";
+}
+
+// =========================
+// GERADOR FIREBASE
+// =========================
+
+async function gerarUsuarioFirebase(){
+const nome = document.getElementById("firebaseNome").value.trim();
+const id = document.getElementById("firebaseID").value.trim();
+const cargo = document.getElementById("firebaseCargo").value;
+const senha = document.getElementById("firebaseSenha").value.trim();
+
+if(!nome || !id || !senha){
+alert("Preencha nome, ID e senha provisória");
+return;
+}
+
+const hash = await gerarHash(senha);
+
+const json = {
+nome:nome,
+id:id,
+cargo:cargo,
+senha:hash,
+primeiroLogin:true,
+criadoEm:Date.now()
+};
+
+document.getElementById("firebaseResultado").value =
+JSON.stringify(json,null,2);
+}
+
+// =========================
 // EXPEDIENTE
+// =========================
 
 async function iniciarExpediente(){
+if(inicioExpediente){
+alert("Expediente já iniciado");
+return;
+}
 
-    imagens = [];
+imagens = [];
+atualizarPreview();
 
-    atualizarPreview();
+inicioExpediente = new Date();
 
-    inicioExpediente =
-    new Date();
+clearInterval(intervalo);
 
-    intervalo =
-    setInterval(
-        atualizarTimer,
-        1000
-    );
-
-    document.getElementById(
-        "status"
-    ).innerHTML =
-
-    `🟢 Entrada:
-    ${inicioExpediente.toLocaleTimeString()}`;
+intervalo = setInterval(atualizarTimer,1000);
+atualizarTimer();
 }
 
 function atualizarTimer(){
+if(!inicioExpediente) return;
 
-    const agora =
-    new Date();
+const agora = new Date();
+const diff = agora - inicioExpediente;
 
-    const diff =
-    agora - inicioExpediente;
+const horas = Math.floor(diff / 3600000);
+const minutos = Math.floor((diff % 3600000)/60000);
+const segundos = Math.floor((diff % 60000)/1000);
 
-    const horas =
-    Math.floor(
-        diff / 3600000
-    );
-
-    const minutos =
-    Math.floor(
-        (diff % 3600000)
-        / 60000
-    );
-
-    const segundos =
-    Math.floor(
-        (diff % 60000)
-        / 1000
-    );
-
-    document.getElementById(
-        "timer"
-    ).innerText =
-
-    `${String(horas).padStart(2,'0')}:${String(minutos).padStart(2,'0')}:${String(segundos).padStart(2,'0')}`;
+document.getElementById("timer").innerText =
+`${String(horas).padStart(2,'0')}:${String(minutos).padStart(2,'0')}:${String(segundos).padStart(2,'0')}`;
 }
 
-// FINALIZAR
-
-async function finalizarExpediente(){
-
-    clearInterval(intervalo);
-
-    const agora =
-    new Date();
-
-    await db.collection(
-        "registros"
-    ).add({
-
-        nome:
-        usuarioAtual.nome,
-
-        id:
-        usuarioAtual.id,
-
-        cargo:
-        usuarioAtual.cargo,
-
-        entrada:
-        inicioExpediente
-        .toLocaleTimeString(),
-
-        saida:
-        agora
-        .toLocaleTimeString(),
-
-        total:
-        document.getElementById(
-            "timer"
-        ).innerText,
-
-        data:
-        agora
-        .toLocaleDateString(),
-
-        prints:imagens,
-
-        timestamp:
-        Date.now()
-    });
-
-    alert(
-        "☣ Expediente salvo"
-    );
-}
-
+// =========================
 // PRINTS
+// =========================
 
-document
-.getElementById("upload")
-.addEventListener(
-"change",
-(e)=>{
+async function processarArquivo(file){
+const reader = new FileReader();
 
-    for(
-        const file
-        of e.target.files
-    ){
+reader.onload = function(e){
+const base64 = e.target.result;
+imagens.push(base64);
+atualizarPreview();
+};
 
-        processarImagem(file);
-    }
+reader.readAsDataURL(file);
+}
+
+document.getElementById("upload").addEventListener("change", async (e)=>{
+for(const file of e.target.files){
+await processarArquivo(file);
+}
 });
 
-document.addEventListener(
-"paste",
-(event)=>{
+document.addEventListener("paste", async (event)=>{
+const items = event.clipboardData.items;
 
-    const items =
-    event.clipboardData.items;
-
-    for(
-        const item
-        of items
-    ){
-
-        if(
-            item.type.indexOf(
-                "image"
-            ) !== -1
-        ){
-
-            processarImagem(
-                item.getAsFile()
-            );
-        }
-    }
+for(const item of items){
+if(item.type.indexOf("image") !== -1){
+const file = item.getAsFile();
+await processarArquivo(file);
+}
+}
 });
 
-function processarImagem(file){
+function removerPrint(index){
+imagens.splice(index,1);
+atualizarPreview();
+}
 
-    const reader =
-    new FileReader();
-
-    reader.onload =
-    function(e){
-
-        imagens.push(
-            e.target.result
-        );
-
-        atualizarPreview();
-    }
-
-    reader.readAsDataURL(file);
+function limparPrints(){
+imagens = [];
+atualizarPreview();
 }
 
 function atualizarPreview(){
+const container = document.getElementById("previewContainer");
 
-    const container =
-    document.getElementById(
-        "previewContainer"
-    );
+container.innerHTML = "";
 
-    container.innerHTML = "";
+imagens.forEach((img,index)=>{
+const div = document.createElement("div");
 
-    imagens.forEach(
-    (img,index)=>{
+div.classList.add("preview-box");
 
-        const div =
-        document.createElement(
-            "div"
-        );
+div.innerHTML = `
+<div class="preview-number">#${index+1}</div>
+<img src="${img}">
+<button class="remove-print" onclick="removerPrint(${index})">X</button>
+`;
 
-        div.classList.add(
-            "preview-box"
-        );
-
-        div.innerHTML = `
-
-        <div class="preview-number">
-            #${index+1}
-        </div>
-
-        <img src="${img}">
-
-        `;
-
-        container.appendChild(div);
-    });
+container.appendChild(div);
+});
 }
+
+// =========================
+// FINALIZAR
+// =========================
+
+async function finalizarExpediente(){
+if(!inicioExpediente){
+alert("Inicie o expediente");
+return;
+}
+
+clearInterval(intervalo);
+
+const agora = new Date();
+const dataISO = agora.toISOString().split("T")[0];
+
+const registro = {
+nome:usuarioAtual.nome,
+id:usuarioAtual.id,
+cargo:usuarioAtual.cargo,
+entrada:inicioExpediente.toLocaleTimeString("pt-BR"),
+saida:agora.toLocaleTimeString("pt-BR"),
+total:document.getElementById("timer").innerText,
+data:dataISO,
+prints:imagens,
+timestamp:Date.now()
+};
+
+await db.collection("registros").add(registro);
+
+registrarLog(`Expediente finalizado por ${usuarioAtual.nome}`);
+
+alert("Registro salvo");
+
+if(gerarPDFAutomatico){
+await gerarPDFDiario(dataISO);
+}
+
+inicioExpediente = null;
+
+document.getElementById("timer").innerText = "00:00:00";
+
+imagens = [];
+atualizarPreview();
+}
+
+// =========================
+// PDF PREMIUM PAGINADO
+// =========================
+
+async function gerarPDFDiario(dataAutomatica = null){
+let dataSelecionada = dataAutomatica;
+
+if(!dataSelecionada){
+dataSelecionada = document.getElementById("dataRelatorio").value;
+}
+
+if(!dataSelecionada){
+alert("Selecione uma data");
+return;
+}
+
+const membroSelecionado =
+document.getElementById("membroRelatorio")?.value || usuarioAtual.id;
+
+const snapshot = await db.collection("registros")
+.where("data","==",dataSelecionada)
+.where("id","==",membroSelecionado)
+.get();
+
+if(snapshot.empty){
+alert("Nenhum registro encontrado");
+return;
+}
+
+const template = document.getElementById("pdfTemplate");
+
+template.innerHTML = "";
+template.style.display = "block";
+
+const printsPorPagina = 10;
+let numeroPagina = 1;
+
+snapshot.forEach(documento=>{
+const item = documento.data();
+const prints = item.prints || [];
+
+if(prints.length === 0){
+criarPaginaPDF(template,item,[],0,0,numeroPagina);
+numeroPagina++;
+return;
+}
+
+for(let i = 0; i < prints.length; i += printsPorPagina){
+const grupo = prints.slice(i, i + printsPorPagina);
+
+criarPaginaPDF(
+template,
+item,
+grupo,
+i,
+prints.length,
+numeroPagina
+);
+
+numeroPagina++;
+}
+});
+
+const { jsPDF } = window.jspdf;
+const pdf = new jsPDF("p","px","a4");
+
+const paginas = Array.from(template.children);
+
+for(let i = 0; i < paginas.length; i++){
+const canvas = await html2canvas(paginas[i],{
+scale:2,
+useCORS:true,
+backgroundColor:null
+});
+
+const img = canvas.toDataURL("image/jpeg",0.95);
+
+const pdfWidth = pdf.internal.pageSize.getWidth();
+const pdfHeight = pdf.internal.pageSize.getHeight();
+
+if(i > 0){
+pdf.addPage();
+}
+
+pdf.addImage(img,"JPEG",0,0,pdfWidth,pdfHeight);
+}
+
+pdf.save(`Relatorio_${dataSelecionada}.pdf`);
+
+template.innerHTML = "";
+template.style.display = "none";
+
+alert("PDF premium gerado");
+}
+
+function criarPaginaPDF(template,item,prints,inicioIndex,totalPrints,numeroPagina){
+const pagina = document.createElement("div");
+
+pagina.style.width = "794px";
+pagina.style.height = "1123px";
+pagina.style.padding = "34px";
+pagina.style.position = "relative";
+pagina.style.boxSizing = "border-box";
+pagina.style.overflow = "hidden";
+pagina.style.color = "#ffffff";
+pagina.style.fontFamily = "'Orbitron', sans-serif";
+pagina.style.background = `
+linear-gradient(rgba(0,0,0,.82), rgba(0,0,0,.94)),
+url('https://images.unsplash.com/photo-1519608487953-e999c86e7455?q=80&w=1600&auto=format&fit=crop')
+center/cover no-repeat
+`;
+
+pagina.innerHTML = `
+<div style="
+height:100%;
+border:2px solid #9dff63;
+border-radius:26px;
+padding:24px;
+box-sizing:border-box;
+background:rgba(0,0,0,.55);
+box-shadow:
+0 0 16px #9dff63,
+inset 0 0 24px rgba(157,255,99,.15);
+position:relative;
+overflow:hidden;
+">
+
+<div style="
+position:absolute;
+top:0;
+left:0;
+right:0;
+height:6px;
+background:linear-gradient(90deg, transparent, #9dff63, transparent);
+box-shadow:0 0 18px #9dff63;
+"></div>
+
+<h1 style="
+text-align:center;
+font-size:34px;
+margin:6px 0 6px;
+color:#b8ff69;
+text-shadow:0 0 15px #b8ff69;
+">
+☣ RELATÓRIO MÉDICO ☣
+</h1>
+
+<p style="
+text-align:center;
+font-size:15px;
+opacity:.85;
+margin-bottom:22px;
+">
+Bunker dos Curandeiros • FiveM RP
+</p>
+
+<div style="
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+margin-bottom:18px;
+">
+
+${infoBox("📅 Data", item.data)}
+${infoBox("👤 Curandeiro", item.nome)}
+${infoBox("🎖 Cargo", formatarCargo(item.cargo))}
+${infoBox("⏱ Tempo Total", formatarTempo(item.total))}
+${infoBox("🟢 Entrada", item.entrada)}
+${infoBox("🔴 Saída", item.saida)}
+
+</div>
+
+<div style="
+margin-top:8px;
+margin-bottom:14px;
+padding:10px 14px;
+border-radius:16px;
+background:rgba(157,255,99,.08);
+border:1px solid rgba(157,255,99,.35);
+color:#b8ff69;
+font-size:16px;
+font-weight:bold;
+text-align:center;
+">
+📸 Atendimentos ${totalPrints ? `${inicioIndex + 1} até ${inicioIndex + prints.length} de ${totalPrints}` : "0"}
+</div>
+
+<div id="printsGrid" style="
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+"></div>
+
+<div style="
+position:absolute;
+bottom:18px;
+left:28px;
+font-size:11px;
+color:rgba(255,255,255,.55);
+">
+Sistema Curandeiros
+</div>
+
+<div style="
+position:absolute;
+bottom:18px;
+right:28px;
+font-size:13px;
+color:#b8ff69;
+">
+Página ${numeroPagina}
+</div>
+
+</div>
+`;
+
+const grid = pagina.querySelector("#printsGrid");
+
+prints.forEach((print,index)=>{
+const card = document.createElement("div");
+
+card.style.background = "rgba(0,0,0,.72)";
+card.style.border = "1px solid rgba(157,255,99,.55)";
+card.style.borderRadius = "12px";
+card.style.padding = "6px";
+card.style.boxSizing = "border-box";
+card.style.boxShadow = "0 0 12px rgba(157,255,99,.14)";
+
+card.innerHTML = `
+<div style="
+text-align:center;
+margin-bottom:4px;
+color:#b8ff69;
+font-weight:bold;
+font-size:10px;
+">
+📷 Atendimento #${inicioIndex + index + 1}
+</div>
+
+<div style="
+width:100%;
+height:75px;
+background:#050505;
+border-radius:10px;
+border:1px solid rgba(157,255,99,.35);
+display:flex;
+align-items:center;
+justify-content:center;
+overflow:hidden;
+">
+<img src="${print}" style="
+width:100%;
+height:100%;
+object-fit:cover;
+display:block;
+">
+</div>
+`;
+
+grid.appendChild(card);
+});
+
+template.appendChild(pagina);
+}
+
+function infoBox(titulo, valor){
+return `
+<div style="
+background:rgba(0,0,0,.58);
+border:1px solid rgba(157,255,99,.25);
+border-radius:14px;
+padding:10px 12px;
+box-sizing:border-box;
+min-height:58px;
+">
+<div style="
+font-size:11px;
+color:#9dff63;
+margin-bottom:6px;
+font-weight:bold;
+">
+${titulo}
+</div>
+<div style="
+font-size:14px;
+color:#ffffff;
+word-break:break-word;
+">
+${valor || "-"}
+</div>
+</div>
+`;
+}
+
+// =========================
+// LOGS
+// =========================
+
+async function registrarLog(texto){
+if(!usuarioAtual) return;
+
+await db.collection("logs").add({
+autor:usuarioAtual.nome,
+texto:texto,
+data:new Date().toLocaleString("pt-BR"),
+timestamp:Date.now()
+});
+}
+
+function carregarLogs(){
+db.collection("logs")
+.orderBy("timestamp","desc")
+.onSnapshot(snapshot=>{
+const lista = document.getElementById("listaLogs");
+
+if(!lista) return;
+
+lista.innerHTML = "";
+
+snapshot.forEach(doc=>{
+const item = doc.data();
+
+const div = document.createElement("div");
+
+div.classList.add("realtime-card");
+
+div.innerHTML = `
+<h3>🛰 ${item.autor}</h3>
+<p>${item.texto}</p>
+<p>${item.data}</p>
+`;
+
+lista.appendChild(div);
+});
+});
+}
+
+// =========================
+// REALTIME ADMIN
+// =========================
+
+function iniciarRealtimePainel(){
+db.collection("registros")
+.orderBy("timestamp","desc")
+.onSnapshot(snapshot=>{
+const lista = document.getElementById("listaRealtime");
+
+if(!lista) return;
+
+lista.innerHTML = "";
+
+snapshot.forEach(doc=>{
+const item = doc.data();
+
+const card = document.createElement("div");
+
+card.classList.add("realtime-card");
+
+card.innerHTML = `
+<h3>${item.nome}</h3>
+<p>📅 ${item.data}</p>
+<p>⏱ ${item.total}</p>
+<p>${item.entrada} - ${item.saida}</p>
+`;
+
+lista.appendChild(card);
+});
+});
+}
+
+// =========================
+// HISTÓRICO
+// =========================
+
+async function filtrarHistorico(){
+const data = document.getElementById("filtroHistorico").value;
+const lista = document.getElementById("historicoLista");
+
+if(!data){
+alert("Selecione uma data");
+return;
+}
+
+lista.innerHTML = "";
+
+let query = db.collection("registros")
+.where("data","==",data);
+
+if(usuarioAtual.cargo !== "chefe"){
+query = query.where("id","==",usuarioAtual.id);
+}
+
+const snapshot = await query.get();
+
+if(snapshot.empty){
+lista.innerHTML = "<p>Nenhum histórico encontrado.</p>";
+return;
+}
+
+snapshot.forEach(doc=>{
+const item = doc.data();
+
+const card = document.createElement("div");
+
+card.classList.add("realtime-card");
+
+card.innerHTML = `
+<h3>${item.nome}</h3>
+<p>📅 ${item.data}</p>
+<p>🟢 Entrada: ${item.entrada}</p>
+<p>🔴 Saída: ${item.saida}</p>
+<p>⏱ Total: ${formatarTempo(item.total)}</p>
+<p>📸 Atendimentos: ${(item.prints || []).length}</p>
+`;
+
+lista.appendChild(card);
+});
+}
+
+// =========================
+// MEMBROS
+// =========================
+
+function carregarMembros(){
+db.collection("usuarios")
+.onSnapshot(snapshot=>{
+const lista = document.getElementById("listaMembros");
+
+if(!lista) return;
+
+lista.innerHTML = "";
+
+snapshot.forEach(doc=>{
+const membro = doc.data();
+
+const card = document.createElement("div");
+
+card.classList.add("membro-card");
+
+card.innerHTML = `
+<h3>${membro.nome}</h3>
+<p>${formatarCargo(membro.cargo)}</p>
+<p>ID: ${membro.id}</p>
+<p>Primeiro login: ${membro.primeiroLogin ? "Sim" : "Não"}</p>
+`;
+
+lista.appendChild(card);
+});
+});
+}
+
+// =========================
+// SELECT MEMBROS PDF
+// =========================
+
+async function carregarSelectMembros(){
+const select = document.getElementById("membroRelatorio");
+
+if(!select) return;
+
+select.innerHTML = `
+<option value="">
+Meu relatório
+</option>
+`;
+
+const snapshot = await db.collection("usuarios").get();
+
+snapshot.forEach(doc=>{
+const membro = doc.data();
+
+const option = document.createElement("option");
+
+option.value = membro.id;
+option.innerText = membro.nome;
+
+select.appendChild(option);
+});
+}
+
+// =========================
+// AUTO LOGIN
+// =========================
+
+restaurarSessao();
+
+// =========================
+// FECHAR ABA
+// =========================
+
+window.addEventListener("beforeunload", async ()=>{
+try{
+if(usuarioAtual){
+await db.collection("ativos")
+.doc(usuarioAtual.docId)
+.delete();
+}
+}catch(err){
+console.error(err);
+}
+});
