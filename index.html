@@ -5,19 +5,36 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>☣ Sistema Curandeiros</title>
 
-<link rel="stylesheet" href="style.css">
+<link
+rel="stylesheet"
+href="style.css">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- FONT -->
+<link
+href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap"
+rel="stylesheet">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- HTML TO PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- QR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 </head>
 
@@ -27,9 +44,13 @@
 
 <header>
 
-<h1>☣ Sistema de Curandeiros</h1>
+<h1>
+☣ SISTEMA CURANDEIROS ☣
+</h1>
 
-<p>Painel Médico Pós-Apocalipse</p>
+<p>
+Painel Militar Pós-Apocalipse
+</p>
 
 </header>
 
@@ -37,11 +58,19 @@
 
 <section class="login-card">
 
-<h2>🔐 Login Seguro</h2>
+<h2>
+🔐 Login
+</h2>
 
-<input type="text" id="idLogin" placeholder="ID">
+<input
+type="text"
+id="idLogin"
+placeholder="ID">
 
-<input type="password" id="senhaLogin" placeholder="Senha">
+<input
+type="password"
+id="senhaLogin"
+placeholder="Senha">
 
 <button onclick="entrarSistema()">
 Entrar
@@ -51,40 +80,80 @@ Entrar
 
 <!-- TROCAR SENHA -->
 
-<div class="card" id="trocarSenhaCard" style="display:none;">
+<div
+class="card"
+id="trocarSenhaCard"
+style="display:none;">
 
-<h2>🔐 Trocar Senha</h2>
+<h2>
+🔐 Alterar Senha
+</h2>
 
-<input type="password" id="novaSenha" placeholder="Nova senha">
+<input
+type="password"
+id="novaSenha"
+placeholder="Nova senha">
 
-<button class="blue" onclick="trocarSenha()">
-Alterar Senha
+<button
+class="blue"
+onclick="trocarSenha()">
+
+Salvar Nova Senha
+
 </button>
 
 </div>
 
 <!-- PAINEL -->
 
-<section id="painel" style="display:none;">
+<section
+id="painel"
+style="display:none;">
 
-<!-- BATE PONTO -->
+<!-- EXPEDIENTE -->
 
 <div class="card">
 
-<h2>⏱ Bate Ponto</h2>
+<h2>
+⏱ Controle de Expediente
+</h2>
 
-<button class="green" onclick="iniciarExpediente()">
+<div class="buttons">
+
+<button
+class="green"
+onclick="iniciarExpediente()">
+
 ▶ Entrada
+
 </button>
 
-<button class="red" onclick="finalizarExpediente()">
+<button
+class="red"
+onclick="finalizarExpediente()">
+
 ■ Saída
+
 </button>
+
+<button
+class="red"
+onclick="logout()">
+
+🚪 Sair
+
+</button>
+
+</div>
 
 <div id="status"></div>
 
-<div class="timer" id="timer">
+<div
+class="timer"
+id="timer">
+
 00:00:00
+
 </div>
 
 </div>
@@ -93,13 +162,29 @@ Alterar Senha
 
 <div class="card">
 
-<h2>📸 Prints dos Atendimentos</h2>
+<h2>
+📸 Prints
+</h2>
 
-<input type="file" id="upload" multiple accept="image/*">
+<input
+type="file"
+id="upload"
+multiple
+accept="image/*">
 
-<p>CTRL + V para colar prints</p>
+<p class="info-text">
+CTRL + V para colar prints
+</p>
 
 <div id="previewContainer"></div>
+
+<button
+class="red"
+onclick="limparPrints()">
+
+🗑 Limpar Prints
+
+</button>
 
 </div>
 
@@ -107,45 +192,175 @@ Alterar Senha
 
 <div class="card">
 
-<h2>📄 Relatório Semanal</h2>
+<h2>
+📄 Relatórios Premium
+</h2>
 
-<button class="blue" onclick="gerarPDFSemanal()">
-Gerar PDF
+<input
+type="date"
+id="dataRelatorio">
+
+<select id="membroRelatorio">
+
+<option value="">
+Meu relatório
+</option>
+
+</select>
+
+<button
+class="blue"
+onclick="gerarPDFDiario()">
+
+☣ Gerar PDF Premium
+
 </button>
+
+</div>
+
+<!-- HISTÓRICO -->
+
+<div class="card">
+
+<h2>
+📚 Histórico
+</h2>
+
+<input
+type="date"
+id="filtroHistorico">
+
+<button
+class="blue"
+onclick="filtrarHistorico()">
+
+🔎 Filtrar
+
+</button>
+
+<div id="historicoLista"></div>
 
 </div>
 
 <!-- ADMIN -->
 
-<div class="card" id="adminPanel" style="display:none;">
+<div
+class="card"
+id="adminPanel"
+style="display:none;">
 
-<h2>👑 Administração</h2>
+<h2>
+👑 Administração
+</h2>
 
-<input type="text" id="novoNome" placeholder="Nome">
-
-<input type="text" id="novoID" placeholder="ID">
-
-<button class="green" onclick="adicionarCurandeiro()">
-➕ Adicionar Curandeiro
-</button>
+<p class="info-text">
+Cadastro, remoção e alteração de membros devem ser feitos pelo Firebase Console.
+</p>
 
 </div>
 
-<!-- REALTIME -->
+<!-- GERADOR FIREBASE -->
 
-<div class="card" id="painelRealtime" style="display:none;">
+<div
+class="card"
+id="geradorFirebase"
+style="display:none;">
 
-<h2>🛰 Painel Administrativo Realtime</h2>
+<h2>
+🔑 Gerador de Hash Firebase
+</h2>
+
+<p class="info-text">
+Use esta ferramenta para gerar o hash da senha provisória. Depois cadastre o membro manualmente no Firebase Console.
+</p>
+
+<input
+type="text"
+id="firebaseNome"
+placeholder="Nome">
+
+<input
+type="text"
+id="firebaseID"
+placeholder="ID">
+
+<select id="firebaseCargo">
+
+<option value="curandeiro">
+Aprendiz Curandeiro
+</option>
+
+<option value="chefe">
+Mestre Curandeiro
+</option>
+
+</select>
+
+<input
+type="text"
+id="firebaseSenha"
+placeholder="Senha provisória">
+
+<button
+class="green"
+onclick="gerarUsuarioFirebase()">
+
+⚡ Gerar Hash
+
+</button>
+
+<textarea
+id="firebaseResultado"
+rows="12"
+readonly
+placeholder="O JSON para cadastrar no Firebase aparecerá aqui..."
+style="
+width:100%;
+margin-top:15px;
+padding:15px;
+border-radius:12px;
+background:#111;
+color:#d7ffd9;
+border:1px solid #2f472f;
+resize:vertical;
+font-family:monospace;
+"></textarea>
+
+</div>
+
+<!-- PAINEL ADMIN -->
+
+<div
+class="card"
+id="painelRealtime"
+style="display:none;">
+
+<h2>
+🛰 Painel Administrativo
+</h2>
 
 <div id="listaRealtime"></div>
+
+<hr>
+
+<h2>
+📋 Logs
+</h2>
+
+<div id="listaLogs"></div>
 
 </div>
 
 <!-- MEMBROS -->
 
-<div class="card" id="membrosPanel" style="display:none;">
+<div
+class="card"
+id="membrosPanel"
+style="display:none;">
 
-<h2>👥 Membros Curandeiros</h2>
+<h2>
+👥 Membros
+</h2>
 
 <div id="listaMembros"></div>
 
@@ -156,21 +371,14 @@ Gerar PDF
 </div>
 
 <!-- TEMPLATE PDF -->
-
-<div id="pdfTemplate">
-
-<div class="pdf-header">
-
-<h1>☣ RELATÓRIO CURANDEIRO</h1>
-
-<p id="pdfNome"></p>
-
-<p id="pdfHoras"></p>
-
-</div>
-
-<div id="pdfPrints"></div>
-
+<div
+id="pdfTemplate"
+style="
+display:none;
+position:absolute;
+left:-99999px;
+top:0;
+">
 </div>
 
 <script src="script.js"></script>
