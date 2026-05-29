@@ -1,12 +1,17 @@
-const firebaseConfig = 
-
-{
+const firebaseConfig = {
+  
   apiKey: "AIzaSyDobXJ_knDYZpmPAoktRzEU8U3GGB6t3cI",
+  
   authDomain: "painel-curandeiros.firebaseapp.com",
+  
   databaseURL: "https://painel-curandeiros-default-rtdb.firebaseio.com",
+  
   projectId: "painel-curandeiros",
+  
   storageBucket: "painel-curandeiros.firebasestorage.app",
+  
   messagingSenderId: "1069159942082",
+  
   appId: "1:1069159942082:web:d77a35c46d68849f2db85b"
 };
 
