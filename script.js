@@ -66,6 +66,12 @@ const segundos = parseInt(partes[2] || 0);
 return `${horas}h ${minutos}min ${segundos}s`;
 }
 
+function formatarDataBR(data){
+return String(data.getDate()).padStart(2,"0") + "/" +
+String(data.getMonth() + 1).padStart(2,"0") + "/" +
+data.getFullYear();
+}
+
 function usuarioEhAdmin(){
 return usuarioAtual &&
 ADMINS_NOMES.includes(usuarioAtual.nome);
@@ -575,10 +581,7 @@ return;
 clearInterval(intervalo);
 
 const agora = new Date();
-const dataISO =
-inicioExpediente.getFullYear() + "-" +
-String(inicioExpediente.getMonth() + 1).padStart(2,"0") + "-" +
-String(inicioExpediente.getDate()).padStart(2,"0");
+const dataISO = formatarDataBR(inicioExpediente);
 
 const registro = {
 nome:usuarioAtual.nome,
@@ -619,6 +622,15 @@ let dataSelecionada = dataAutomatica;
 
 if(!dataSelecionada){
 dataSelecionada = document.getElementById("dataRelatorio").value;
+}
+
+if(dataSelecionada && dataSelecionada.includes("-")){
+const partes = dataSelecionada.split("-");
+
+dataSelecionada =
+partes[2] + "/" +
+partes[1] + "/" +
+partes[0];
 }
 
 if(!dataSelecionada){
