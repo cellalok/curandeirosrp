@@ -71,6 +71,14 @@ return usuarioAtual &&
 ADMINS_NOMES.includes(usuarioAtual.nome);
 }
 
+function podeVerRelatoriosEquipe(){
+return usuarioAtual &&
+(
+usuarioAtual.cargo === "chefe" ||
+ADMINS_NOMES.includes(usuarioAtual.nome)
+);
+}
+
 function gerarSenhaProvisoria(){
 const caracteres = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#$%";
 let senha = "";
@@ -236,9 +244,12 @@ alert("Primeiro acesso detectado.\n\nAltere sua senha provisória antes de conti
 
 // Online/offline visível para todos
 carregarMembrosOnlineGeral();
+carregarSelectMembros();
 
 if(usuarioEhAdmin()){
 document.getElementById("adminPanel").style.display = "block";
+
+limparRegistrosAntigos();
 
 const btnGerador = document.getElementById("btnAbaGerador");
 
@@ -249,9 +260,9 @@ btnGerador.style.display = "block";
 iniciarRealtimePainel();
 carregarLogs();
 carregarMembros();
-carregarSelectMembros();
 carregarSelectResetSenha();
 mostrarAba("realtime");
+
 }
 }
 
@@ -564,7 +575,9 @@ return;
 clearInterval(intervalo);
 
 const agora = new Date();
-const dataISO = agora.toISOString().split("T")[0];
+const dataISO = agora.toLocaleDateString("en-CA", {
+timeZone: "America/Sao_Paulo"
+});
 
 const registro = {
 nome:usuarioAtual.nome,
@@ -613,11 +626,17 @@ return;
 }
 
 const membroSelecionado =
-document.getElementById("membroRelatorio")?.value || usuarioAtual.id;
+document.getElementById("membroRelatorio")?.value;
+
+let idBusca = usuarioAtual.id;
+
+if(podeVerRelatoriosEquipe() && membroSelecionado){
+idBusca = membroSelecionado;
+}
 
 const snapshot = await db.collection("registros")
 .where("data","==",dataSelecionada)
-.where("id","==",membroSelecionado)
+.where("id","==",idBusca)
 .get();
 
 if(snapshot.empty){
@@ -1185,7 +1204,7 @@ Meu relatório
 </option>
 `;
 
-if(!usuarioEhAdmin()) return;
+if(!podeVerRelatoriosEquipe()) return;
 
 const snapshot = await db.collection("usuarios").get();
 
@@ -1201,6 +1220,40 @@ select.appendChild(option);
 });
 }
 
+async function limparRegistrosAntigos(){
+
+if(!usuarioEhAdmin()) return;
+
+try{
+
+const agora = Date.now();
+const quinzeDias = 15 * 24 * 60 * 60 * 1000;
+const limite = agora - quinzeDias;
+
+const snapshot = await db.collection("registros")
+.where("timestamp","<",limite)
+.get();
+
+if(snapshot.empty){
+console.log("Nenhum registro antigo para apagar.");
+return;
+}
+
+const batch = db.batch();
+
+snapshot.forEach(doc=>{
+batch.delete(doc.ref);
+});
+
+await batch.commit();
+
+console.log("Registros antigos apagados:", snapshot.size);
+
+}catch(error){
+console.error("Erro ao limpar registros antigos:", error);
+}
+
+}
 // =========================
 // AUTO LOGIN
 // =========================
