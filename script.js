@@ -575,9 +575,10 @@ return;
 clearInterval(intervalo);
 
 const agora = new Date();
-const dataISO = agora.toLocaleDateString("en-CA", {
-timeZone: "America/Sao_Paulo"
-});
+const dataISO =
+inicioExpediente.getFullYear() + "-" +
+String(inicioExpediente.getMonth() + 1).padStart(2,"0") + "-" +
+String(inicioExpediente.getDate()).padStart(2,"0");
 
 const registro = {
 nome:usuarioAtual.nome,
@@ -636,11 +637,35 @@ idBusca = membroSelecionado;
 
 const snapshot = await db.collection("registros")
 .where("data","==",dataSelecionada)
-.where("id","==",idBusca)
 .get();
 
 if(snapshot.empty){
-alert("Nenhum registro encontrado");
+alert("Nenhum registro encontrado nessa data.");
+return;
+}
+
+const registrosFiltrados = [];
+
+snapshot.forEach(doc=>{
+const item = doc.data();
+
+const idRegistro = (item.id || "")
+.toString()
+.trim()
+.toUpperCase();
+
+const idProcurado = (idBusca || "")
+.toString()
+.trim()
+.toUpperCase();
+
+if(idRegistro === idProcurado){
+registrosFiltrados.push(item);
+}
+});
+
+if(registrosFiltrados.length === 0){
+alert("Existe registro nessa data, mas não para o membro selecionado.");
 return;
 }
 
@@ -652,8 +677,7 @@ template.style.display = "block";
 const printsPorPagina = 10;
 let numeroPagina = 1;
 
-snapshot.forEach(documento=>{
-const item = documento.data();
+registrosFiltrados.forEach(item=>{
 const prints = item.prints || [];
 
 if(prints.length === 0){
