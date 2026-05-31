@@ -56,6 +56,20 @@ Primeiro acesso detectado. Cadastre uma nova senha para continuar.
 
 <section id="painel" style="display:none;">
 
+<div class="main-tabs">
+
+<button class="tab-btn active" onclick="abrirSecao('principal',this)">🏠 Principal</button>
+
+<button class="tab-btn" onclick="abrirSecao('equipe',this)">👥 Equipe</button>
+
+<button class="tab-btn" onclick="abrirSecao('relatorios',this)">📋 Relatórios</button>
+
+<button class="tab-btn" onclick="abrirSecao('admin',this)">👑 Administração</button>
+
+</div>
+
+<div id="secaoPrincipal" class="secao">
+
 <div class="card">
 
 <h2>👤 Perfil Ativo</h2>
@@ -118,6 +132,10 @@ CTRL + V para colar prints dos atendimentos aceitos.
 
 </div>
 
+</div>
+
+<div id="secaoEquipe" class="secao" style="display:none;">
+
 <div class="card" id="onlinePanel">
 
 <h2>👥 Curandeiros Online</h2>
@@ -129,6 +147,24 @@ Status atualizado automaticamente a cada 30 segundos.
 <div id="listaMembrosOnline"></div>
 
 </div>
+
+<div class="card" id="atividadeSemanalPanel">
+
+<h2>📊 Atividade Semanal da Equipe</h2>
+
+<p class="info-text">
+Total de horas por curandeiro, quantidade de expedientes e período analisado: últimos 7 dias.
+</p>
+
+<div id="atividadeSemanalLista">
+<p class="info-text">A atividade semanal será exibida aqui após a implementação no script.</p>
+</div>
+
+</div>
+
+</div>
+
+<div id="secaoRelatorios" class="secao" style="display:none;">
 
 <div class="card">
 
@@ -155,6 +191,10 @@ Status atualizado automaticamente a cada 30 segundos.
 <div id="historicoLista"></div>
 
 </div>
+
+</div>
+
+<div id="secaoAdmin" class="secao" style="display:none;">
 
 <div class="card" id="adminPanel" style="display:none;">
 
@@ -255,6 +295,8 @@ placeholder="A nova senha provisória aparecerá aqui..."></textarea>
 
 </div>
 
+</div>
+
 </section>
 
 </div>
@@ -269,7 +311,7 @@ top:0;
 ">
 </div>
 
-<script src="script.js?v=4"></script>
+<script src="script.js?v=5"></script>
 
 </body>
 </html>
