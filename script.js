@@ -1564,3 +1564,44 @@ await db.collection("ativos")
 console.error(err);
 }
 });
+
+
+// =========================
+// ABAS PRINCIPAIS
+// =========================
+
+function abrirSecao(secao,botao){
+
+document
+.querySelectorAll(".secao")
+.forEach(div=>{
+div.style.display = "none";
+});
+
+document
+.querySelectorAll(".tab-btn")
+.forEach(btn=>{
+btn.classList.remove("active");
+});
+
+if(secao === "principal"){
+document.getElementById("secaoPrincipal").style.display = "block";
+}
+
+if(secao === "equipe"){
+document.getElementById("secaoEquipe").style.display = "block";
+}
+
+if(secao === "relatorios"){
+document.getElementById("secaoRelatorios").style.display = "block";
+}
+
+if(secao === "admin"){
+document.getElementById("secaoAdmin").style.display = "block";
+}
+
+if(botao){
+botao.classList.add("active");
+}
+
+}
