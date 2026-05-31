@@ -282,6 +282,7 @@ alert("Primeiro acesso detectado.\n\nAltere sua senha provisória antes de conti
 carregarMembrosOnlineGeral();
 carregarSelectMembros();
 carregarSelectCurandeirosExpediente();
+carregarAtividadeSemanal();
 
 if(usuarioEhAdmin()){
 document.getElementById("adminPanel").style.display = "block";
@@ -1566,6 +1567,143 @@ console.error(err);
 });
 
 
+
+
+// =========================
+// ATIVIDADE SEMANAL DA EQUIPE
+// =========================
+
+function tempoParaSegundos(tempo){
+if(!tempo) return 0;
+
+const partes = tempo.split(":");
+
+const horas = parseInt(partes[0] || 0);
+const minutos = parseInt(partes[1] || 0);
+const segundos = parseInt(partes[2] || 0);
+
+return (horas * 3600) + (minutos * 60) + segundos;
+}
+
+function segundosParaTempo(segundos){
+const horas = Math.floor(segundos / 3600);
+const minutos = Math.floor((segundos % 3600) / 60);
+
+return `${horas}h ${minutos}min`;
+}
+
+function dataBRParaDate(dataBR){
+if(!dataBR || !dataBR.includes("/")) return null;
+
+const partes = dataBR.split("/");
+
+return new Date(
+parseInt(partes[2]),
+parseInt(partes[1]) - 1,
+parseInt(partes[0])
+);
+}
+
+function formatarPeriodoBR(data){
+return String(data.getDate()).padStart(2,"0") + "/" +
+String(data.getMonth() + 1).padStart(2,"0") + "/" +
+data.getFullYear();
+}
+
+async function carregarAtividadeSemanal(){
+const lista = document.getElementById("atividadeSemanalLista");
+
+if(!lista) return;
+
+if(!podeVerRelatoriosEquipe()){
+lista.innerHTML = "<p class='info-text'>Área disponível apenas para Mestres Curandeiros e Administradores.</p>";
+return;
+}
+
+lista.innerHTML = "<p class='info-text'>Carregando atividade semanal...</p>";
+
+try{
+
+const hoje = new Date();
+hoje.setHours(23,59,59,999);
+
+const limite = new Date();
+limite.setDate(hoje.getDate() - 7);
+limite.setHours(0,0,0,0);
+
+const snapshot = await db.collection("registros").get();
+
+const resumo = {};
+
+snapshot.forEach(doc=>{
+const item = doc.data();
+
+if(!item.data || !item.total) return;
+
+const dataRegistro = dataBRParaDate(item.data);
+
+if(!dataRegistro) return;
+
+if(dataRegistro < limite || dataRegistro > hoje) return;
+
+const curandeiros = obterCurandeirosDoRegistro(item);
+
+curandeiros.forEach(membro=>{
+const id = (membro.id || membro.nome || "sem-id")
+.toString()
+.trim()
+.toUpperCase();
+
+if(!resumo[id]){
+resumo[id] = {
+nome:membro.nome || "Curandeiro sem nome",
+cargo:membro.cargo || "curandeiro",
+segundos:0,
+expedientes:0
+};
+}
+
+resumo[id].segundos += tempoParaSegundos(item.total);
+resumo[id].expedientes += 1;
+});
+});
+
+const membros = Object.values(resumo).sort((a,b)=>{
+return a.nome.localeCompare(b.nome);
+});
+
+if(membros.length === 0){
+lista.innerHTML = "<p class='info-text'>Nenhuma atividade registrada nos últimos 7 dias.</p>";
+return;
+}
+
+lista.innerHTML = `
+<p class="info-text">
+Período analisado: ${formatarPeriodoBR(limite)} até ${formatarPeriodoBR(hoje)}
+</p>
+`;
+
+membros.forEach(membro=>{
+const div = document.createElement("div");
+
+div.classList.add("atividade-card");
+
+div.innerHTML = `
+<h3>${membro.nome}</h3>
+<p>🎖 ${formatarCargo(membro.cargo)}</p>
+<p>⏱ Tempo total: ${segundosParaTempo(membro.segundos)}</p>
+<p>📅 Expedientes: ${membro.expedientes}</p>
+`;
+
+lista.appendChild(div);
+});
+
+}catch(error){
+console.error("Erro ao carregar atividade semanal:", error);
+lista.innerHTML = "<p class='info-text'>Erro ao carregar atividade semanal.</p>";
+}
+}
+
 // =========================
 // ABAS PRINCIPAIS
 // =========================
@@ -1590,6 +1728,7 @@ document.getElementById("secaoPrincipal").style.display = "block";
 
 if(secao === "equipe"){
 document.getElementById("secaoEquipe").style.display = "block";
+carregarAtividadeSemanal();
 }
 
 if(secao === "relatorios"){
