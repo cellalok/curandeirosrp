@@ -803,6 +803,9 @@ const idsCurandeiros = curandeiros.map(membro =>
 (membro.id || "").toString().trim().toUpperCase()
 );
 
+console.log("Curandeiros:", curandeiros);
+console.log("idsCurandeiros:", idsCurandeiros);
+
 const registro = {
 nome:usuarioAtual.nome,
 id:usuarioAtual.id,
