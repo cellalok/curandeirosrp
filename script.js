@@ -799,11 +799,16 @@ cargo:usuarioAtual.cargo
 ...curandeirosExpediente
 ];
 
+const idsCurandeiros = curandeiros.map(membro =>
+(membro.id || "").toString().trim().toUpperCase()
+);
+
 const registro = {
 nome:usuarioAtual.nome,
 id:usuarioAtual.id,
 cargo:usuarioAtual.cargo,
 curandeiros:curandeiros,
+idsCurandeiros:idsCurandeiros,
 entrada:inicioExpediente.toLocaleTimeString("pt-BR"),
 saida:agora.toLocaleTimeString("pt-BR"),
 total:document.getElementById("timer").innerText,
@@ -1269,38 +1274,28 @@ return;
 
 lista.innerHTML = "";
 
-const snapshot = await db.collection("registros")
+let snapshot;
+
+if(usuarioEhAdmin()){
+snapshot = await db.collection("registros")
 .where("data","==",data)
 .get();
+}else{
+const meuId = (usuarioAtual.id || "").toString().trim().toUpperCase();
+
+snapshot = await db.collection("registros")
+.where("data","==",data)
+.where("idsCurandeiros","array-contains",meuId)
+.get();
+}
 
 if(snapshot.empty){
-lista.innerHTML = "<p>Nenhum histórico encontrado.</p>";
-return;
-}
-
-const registrosPermitidos = [];
-
-snapshot.forEach(doc=>{
-const item = doc.data();
-const curandeiros = obterCurandeirosDoRegistro(item);
-
-const participa =
-curandeiros.some(membro =>
-(membro.id || "").toString().trim().toUpperCase() ===
-(usuarioAtual.id || "").toString().trim().toUpperCase()
-);
-
-if(usuarioEhAdmin() || participa){
-registrosPermitidos.push(item);
-}
-});
-
-if(registrosPermitidos.length === 0){
 lista.innerHTML = "<p>Nenhum histórico encontrado para você nesta data.</p>";
 return;
 }
 
-registrosPermitidos.forEach(item=>{
+snapshot.forEach(doc=>{
+const item = doc.data();
 const curandeiros = obterCurandeirosDoRegistro(item);
 
 const card = document.createElement("div");
