@@ -1269,22 +1269,38 @@ return;
 
 lista.innerHTML = "";
 
-let query = db.collection("registros")
-.where("data","==",data);
-
-if(!usuarioEhAdmin()){
-query = query.where("id","==",usuarioAtual.id);
-}
-
-const snapshot = await query.get();
+const snapshot = await db.collection("registros")
+.where("data","==",data)
+.get();
 
 if(snapshot.empty){
 lista.innerHTML = "<p>Nenhum histórico encontrado.</p>";
 return;
 }
 
+const registrosPermitidos = [];
+
 snapshot.forEach(doc=>{
 const item = doc.data();
+const curandeiros = obterCurandeirosDoRegistro(item);
+
+const participa =
+curandeiros.some(membro =>
+(membro.id || "").toString().trim().toUpperCase() ===
+(usuarioAtual.id || "").toString().trim().toUpperCase()
+);
+
+if(usuarioEhAdmin() || participa){
+registrosPermitidos.push(item);
+}
+});
+
+if(registrosPermitidos.length === 0){
+lista.innerHTML = "<p>Nenhum histórico encontrado para você nesta data.</p>";
+return;
+}
+
+registrosPermitidos.forEach(item=>{
 const curandeiros = obterCurandeirosDoRegistro(item);
 
 const card = document.createElement("div");
