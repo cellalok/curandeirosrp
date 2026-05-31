@@ -4,20 +4,17 @@
 <head>
 
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>☣ Sistema Curandeiros</title>
 
 <link rel="stylesheet" href="style.css">
-
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </head>
@@ -35,8 +32,7 @@
 
 <h2>🔐 Login</h2>
 
-<input type="text" id="idLogin" placeholder="ID">
-
+<input type="text" id="idLogin" placeholder="CitizenID">
 <input type="password" id="senhaLogin" placeholder="Senha">
 
 <button onclick="entrarSistema()">Entrar</button>
@@ -73,15 +69,35 @@ Primeiro acesso detectado. Cadastre uma nova senha para continuar.
 
 <div class="buttons">
 
-<button class="green" onclick="iniciarExpediente()">▶ Entrada</button>
+<button class="green" onclick="iniciarExpediente()">▶ Iniciar</button>
 
-<button class="red" onclick="finalizarExpediente()">■ Saída</button>
+<button class="blue" onclick="pausarExpediente()">⏸ Pausar</button>
 
-<button class="red" onclick="logout()">🚪 Sair</button>
+<button class="red" onclick="finalizarExpediente()">■ Finalizar</button>
+
+<button class="red" onclick="logout()">🚪 Deslogar</button>
 
 </div>
 
 <div class="timer" id="timer">00:00:00</div>
+
+</div>
+
+<div class="card">
+
+<h2>👥 Curandeiros no Expediente</h2>
+
+<p class="info-text">
+Adicione outros curandeiros que participaram do mesmo expediente. Eles aparecerão no relatório PNG.
+</p>
+
+<select id="selectCurandeiroExtra">
+<option value="">Selecione um curandeiro</option>
+</select>
+
+<button class="green" onclick="adicionarCurandeiroExpediente()">➕ Adicionar Curandeiro</button>
+
+<div id="listaCurandeirosExpediente"></div>
 
 </div>
 
@@ -92,7 +108,7 @@ Primeiro acesso detectado. Cadastre uma nova senha para continuar.
 <input type="file" id="upload" multiple accept="image/*">
 
 <p class="info-text">
-CTRL + V para colar prints
+CTRL + V para colar prints dos atendimentos aceitos.
 </p>
 
 <div id="previewContainer"></div>
@@ -115,7 +131,7 @@ Status atualizado automaticamente a cada 30 segundos.
 
 <div class="card">
 
-<h2>📄 Relatórios Premium</h2>
+<h2>🖼 Relatórios Premium</h2>
 
 <input type="date" id="dataRelatorio">
 
@@ -123,7 +139,7 @@ Status atualizado automaticamente a cada 30 segundos.
 <option value="">Meu relatório</option>
 </select>
 
-<button class="blue" onclick="gerarPDFDiario()">☣ Gerar PDF Premium</button>
+<button class="blue" onclick="gerarPNGDiario()">☣ Gerar PNG Premium</button>
 
 </div>
 
@@ -197,7 +213,7 @@ Use esta ferramenta apenas para gerar o hash da senha provisória. Depois cadast
 
 <input type="text" id="firebaseNome" placeholder="Nome">
 
-<input type="text" id="firebaseID" placeholder="ID">
+<input type="text" id="firebaseID" placeholder="CitizenID">
 
 <select id="firebaseCargo">
 <option value="curandeiro">Aprendiz Curandeiro</option>
@@ -243,7 +259,7 @@ placeholder="A nova senha provisória aparecerá aqui..."></textarea>
 </div>
 
 <div
-id="pdfTemplate"
+id="pngTemplate"
 style="
 display:none;
 position:absolute;
@@ -252,7 +268,7 @@ top:0;
 ">
 </div>
 
-<script src="script.js?v=3"></script>
+<script src="script.js?v=4"></script>
 
 </body>
 </html>
