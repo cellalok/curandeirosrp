@@ -882,17 +882,24 @@ const registrosFiltrados = [];
 snapshot.forEach(doc=>{
 const item = doc.data();
 
-const idRegistro = (item.id || "")
-.toString()
-.trim()
-.toUpperCase();
-
 const idProcurado = (idBusca || "")
 .toString()
 .trim()
 .toUpperCase();
 
-if(idRegistro === idProcurado){
+const idsCurandeiros = Array.isArray(item.idsCurandeiros)
+? item.idsCurandeiros.map(id => id.toString().trim().toUpperCase())
+: [];
+
+const idRegistro = (item.id || "")
+.toString()
+.trim()
+.toUpperCase();
+
+if(
+idRegistro === idProcurado ||
+idsCurandeiros.includes(idProcurado)
+){
 registrosFiltrados.push(item);
 }
 });
