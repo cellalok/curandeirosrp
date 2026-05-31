@@ -18,13 +18,19 @@ let intervalo = null;
 let heartbeatInterval = null;
 let imagens = [];
 
+let pausado = false;
+let inicioPausa = null;
+let tempoPausadoTotal = 0;
+
+let curandeirosExpediente = [];
+
 let usuariosCache = [];
 let ativosCache = {};
 
 let usuariosOnlineCache = [];
 let ativosOnlineCache = {};
 
-const gerarPDFAutomatico = true;
+const gerarPNGAutomatico = true;
 
 const ADMINS_NOMES = [
 "Luna Serenight",
@@ -72,6 +78,17 @@ String(data.getMonth() + 1).padStart(2,"0") + "/" +
 data.getFullYear();
 }
 
+function converterDataInputParaBR(data){
+if(!data) return "";
+
+if(data.includes("-")){
+const partes = data.split("-");
+return partes[2] + "/" + partes[1] + "/" + partes[0];
+}
+
+return data;
+}
+
 function usuarioEhAdmin(){
 return usuarioAtual &&
 ADMINS_NOMES.includes(usuarioAtual.nome);
@@ -94,6 +111,19 @@ senha += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
 }
 
 return senha;
+}
+
+function obterTemplateRelatorio(){
+return document.getElementById("pngTemplate") || document.getElementById("pdfTemplate");
+}
+
+function baixarPNG(dataURL,nomeArquivo){
+const link = document.createElement("a");
+link.href = dataURL;
+link.download = nomeArquivo;
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
 }
 
 // =========================
@@ -193,7 +223,7 @@ docId:doc.id
 });
 
 if(!usuarioEncontrado){
-alert("ID inválido");
+alert("CitizenID inválido");
 return;
 }
 
@@ -251,6 +281,7 @@ alert("Primeiro acesso detectado.\n\nAltere sua senha provisória antes de conti
 // Online/offline visível para todos
 carregarMembrosOnlineGeral();
 carregarSelectMembros();
+carregarSelectCurandeirosExpediente();
 
 if(usuarioEhAdmin()){
 document.getElementById("adminPanel").style.display = "block";
@@ -372,7 +403,7 @@ const cargo = document.getElementById("firebaseCargo").value;
 const senha = document.getElementById("firebaseSenha").value.trim();
 
 if(!nome || !id || !senha){
-alert("Preencha nome, ID e senha provisória");
+alert("Preencha nome, CitizenID e senha provisória");
 return;
 }
 
@@ -452,7 +483,7 @@ const membro = doc.data();
 document.getElementById("resultadoResetSenha").value =
 `Membro: ${membro.nome}
 
-ID: ${membro.id}
+CitizenID: ${membro.id}
 
 Nova senha provisória:
 
@@ -475,15 +506,26 @@ alert("Erro ao resetar senha. Verifique as regras do Firebase.");
 // =========================
 
 async function iniciarExpediente(){
-if(inicioExpediente){
+if(inicioExpediente && !pausado){
 alert("Expediente já iniciado");
+return;
+}
+
+if(inicioExpediente && pausado){
+pausarExpediente();
 return;
 }
 
 imagens = [];
 atualizarPreview();
 
+curandeirosExpediente = [];
+renderizarCurandeirosExpediente();
+
 inicioExpediente = new Date();
+pausado = false;
+inicioPausa = null;
+tempoPausadoTotal = 0;
 
 clearInterval(intervalo);
 
@@ -491,11 +533,55 @@ intervalo = setInterval(atualizarTimer,1000);
 atualizarTimer();
 }
 
+function pausarExpediente(){
+if(!inicioExpediente){
+alert("Inicie o expediente antes de pausar.");
+return;
+}
+
+if(!pausado){
+pausado = true;
+inicioPausa = new Date();
+
+clearInterval(intervalo);
+
+alert("Expediente pausado.");
+return;
+}
+
+const agora = new Date();
+
+tempoPausadoTotal += agora - inicioPausa;
+
+pausado = false;
+inicioPausa = null;
+
+clearInterval(intervalo);
+
+intervalo = setInterval(atualizarTimer,1000);
+atualizarTimer();
+
+alert("Expediente retomado.");
+}
+
+function calcularTempoExpediente(){
+if(!inicioExpediente) return 0;
+
+const agora = new Date();
+
+let diff = agora - inicioExpediente - tempoPausadoTotal;
+
+if(pausado && inicioPausa){
+diff -= agora - inicioPausa;
+}
+
+return Math.max(0,diff);
+}
+
 function atualizarTimer(){
 if(!inicioExpediente) return;
 
-const agora = new Date();
-const diff = agora - inicioExpediente;
+const diff = calcularTempoExpediente();
 
 const horas = Math.floor(diff / 3600000);
 const minutos = Math.floor((diff % 3600000)/60000);
@@ -503,6 +589,119 @@ const segundos = Math.floor((diff % 60000)/1000);
 
 document.getElementById("timer").innerText =
 `${String(horas).padStart(2,'0')}:${String(minutos).padStart(2,'0')}:${String(segundos).padStart(2,'0')}`;
+}
+
+// =========================
+// CURANDEIROS NO EXPEDIENTE
+// =========================
+
+async function carregarSelectCurandeirosExpediente(){
+const select = document.getElementById("selectCurandeiroExtra");
+
+if(!select) return;
+
+select.innerHTML = '<option value="">Selecione um curandeiro</option>';
+
+const snapshot = await db.collection("usuarios").get();
+
+snapshot.forEach(doc=>{
+const membro = doc.data();
+
+if(usuarioAtual && membro.id === usuarioAtual.id) return;
+
+const option = document.createElement("option");
+
+option.value = JSON.stringify({
+nome:membro.nome,
+id:membro.id,
+cargo:membro.cargo
+});
+
+option.innerText = `${membro.nome} (${formatarCargo(membro.cargo)})`;
+
+select.appendChild(option);
+});
+}
+
+function adicionarCurandeiroExpediente(){
+const select = document.getElementById("selectCurandeiroExtra");
+
+if(!select || !select.value){
+alert("Selecione um curandeiro.");
+return;
+}
+
+const membro = JSON.parse(select.value);
+
+const jaExiste = curandeirosExpediente.some(item=>item.id === membro.id);
+
+if(jaExiste){
+alert("Este curandeiro já foi adicionado ao expediente.");
+return;
+}
+
+curandeirosExpediente.push(membro);
+
+select.value = "";
+
+renderizarCurandeirosExpediente();
+}
+
+function removerCurandeiroExpediente(id){
+curandeirosExpediente = curandeirosExpediente.filter(item=>item.id !== id);
+renderizarCurandeirosExpediente();
+}
+
+function renderizarCurandeirosExpediente(){
+const lista = document.getElementById("listaCurandeirosExpediente");
+
+if(!lista) return;
+
+lista.innerHTML = "";
+
+if(curandeirosExpediente.length === 0){
+lista.innerHTML = '<p class="info-text">Nenhum curandeiro extra adicionado.</p>';
+return;
+}
+
+curandeirosExpediente.forEach(membro=>{
+const div = document.createElement("div");
+
+div.classList.add("curandeiro-extra-card");
+
+div.innerHTML = `
+<div>
+<strong>${membro.nome}</strong><br>
+<span>${formatarCargo(membro.cargo)} • CitizenID: ${membro.id}</span>
+</div>
+
+<button class="red" onclick="removerCurandeiroExpediente('${membro.id}')">
+Remover
+</button>
+`;
+
+lista.appendChild(div);
+});
+}
+
+function obterCurandeirosDoRegistro(item){
+if(item.curandeiros && Array.isArray(item.curandeiros) && item.curandeiros.length){
+return item.curandeiros;
+}
+
+return [{
+nome:item.nome,
+id:item.id,
+cargo:item.cargo
+}];
+}
+
+function formatarCurandeirosTexto(curandeiros){
+if(!curandeiros || !curandeiros.length) return "-";
+
+return curandeiros
+.map(membro=>`${membro.nome} (${formatarCargo(membro.cargo)})`)
+.join(", ");
 }
 
 // =========================
@@ -578,15 +777,33 @@ alert("Inicie o expediente");
 return;
 }
 
+if(pausado && inicioPausa){
+const agoraPausa = new Date();
+tempoPausadoTotal += agoraPausa - inicioPausa;
+pausado = false;
+inicioPausa = null;
+}
+
 clearInterval(intervalo);
+atualizarTimer();
 
 const agora = new Date();
 const dataISO = formatarDataBR(inicioExpediente);
+
+const curandeiros = [
+{
+nome:usuarioAtual.nome,
+id:usuarioAtual.id,
+cargo:usuarioAtual.cargo
+},
+...curandeirosExpediente
+];
 
 const registro = {
 nome:usuarioAtual.nome,
 id:usuarioAtual.id,
 cargo:usuarioAtual.cargo,
+curandeiros:curandeiros,
 entrada:inicioExpediente.toLocaleTimeString("pt-BR"),
 saida:agora.toLocaleTimeString("pt-BR"),
 total:document.getElementById("timer").innerText,
@@ -601,37 +818,36 @@ registrarLog(`Expediente finalizado por ${usuarioAtual.nome}`);
 
 alert("Registro salvo");
 
-if(gerarPDFAutomatico){
-await gerarPDFDiario(dataISO);
+if(gerarPNGAutomatico){
+await gerarPNGDiario(dataISO);
 }
 
 inicioExpediente = null;
+pausado = false;
+inicioPausa = null;
+tempoPausadoTotal = 0;
 
 document.getElementById("timer").innerText = "00:00:00";
 
 imagens = [];
+curandeirosExpediente = [];
+
 atualizarPreview();
+renderizarCurandeirosExpediente();
 }
 
 // =========================
-// PDF PREMIUM PAGINADO
+// PNG PREMIUM PAGINADO
 // =========================
 
-async function gerarPDFDiario(dataAutomatica = null){
+async function gerarPNGDiario(dataAutomatica = null){
 let dataSelecionada = dataAutomatica;
 
 if(!dataSelecionada){
 dataSelecionada = document.getElementById("dataRelatorio").value;
 }
 
-if(dataSelecionada && dataSelecionada.includes("-")){
-const partes = dataSelecionada.split("-");
-
-dataSelecionada =
-partes[2] + "/" +
-partes[1] + "/" +
-partes[0];
-}
+dataSelecionada = converterDataInputParaBR(dataSelecionada);
 
 if(!dataSelecionada){
 alert("Selecione uma data");
@@ -681,7 +897,7 @@ alert("Existe registro nessa data, mas não para o membro selecionado.");
 return;
 }
 
-const template = document.getElementById("pdfTemplate");
+const template = obterTemplateRelatorio();
 
 template.innerHTML = "";
 template.style.display = "block";
@@ -693,7 +909,7 @@ registrosFiltrados.forEach(item=>{
 const prints = item.prints || [];
 
 if(prints.length === 0){
-criarPaginaPDF(template,item,[],0,0,numeroPagina);
+criarPaginaRelatorio(template,item,[],0,0,numeroPagina);
 numeroPagina++;
 return;
 }
@@ -701,7 +917,7 @@ return;
 for(let i = 0; i < prints.length; i += printsPorPagina){
 const grupo = prints.slice(i, i + printsPorPagina);
 
-criarPaginaPDF(
+criarPaginaRelatorio(
 template,
 item,
 grupo,
@@ -714,9 +930,6 @@ numeroPagina++;
 }
 });
 
-const { jsPDF } = window.jspdf;
-const pdf = new jsPDF("p","px","a4");
-
 const paginas = Array.from(template.children);
 
 for(let i = 0; i < paginas.length; i++){
@@ -726,28 +939,28 @@ useCORS:true,
 backgroundColor:null
 });
 
-const img = canvas.toDataURL("image/jpeg",0.95);
+const img = canvas.toDataURL("image/png");
 
-const pdfWidth = pdf.internal.pageSize.getWidth();
-const pdfHeight = pdf.internal.pageSize.getHeight();
+const sufixo = paginas.length > 1 ? `_pagina_${i+1}` : "";
 
-if(i > 0){
-pdf.addPage();
+baixarPNG(img,`Relatorio_${dataSelecionada.replaceAll("/","-")}${sufixo}.png`);
 }
-
-pdf.addImage(img,"JPEG",0,0,pdfWidth,pdfHeight);
-}
-
-pdf.save(`Relatorio_${dataSelecionada}.pdf`);
 
 template.innerHTML = "";
 template.style.display = "none";
 
-alert("PDF premium gerado");
+alert("PNG premium gerado");
 }
 
-function criarPaginaPDF(template,item,prints,inicioIndex,totalPrints,numeroPagina){
+// Compatibilidade com botões antigos, caso ainda existam em alguma versão do HTML
+async function gerarPDFDiario(dataAutomatica = null){
+return gerarPNGDiario(dataAutomatica);
+}
+
+function criarPaginaRelatorio(template,item,prints,inicioIndex,totalPrints,numeroPagina){
 const pagina = document.createElement("div");
+
+const curandeiros = obterCurandeirosDoRegistro(item);
 
 pagina.style.width = "794px";
 pagina.style.height = "1123px";
@@ -811,16 +1024,22 @@ Bunker dos Curandeiros • FiveM RP
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:12px;
-margin-bottom:18px;
+margin-bottom:12px;
 ">
 
 ${infoBox("📅 Data", item.data)}
-${infoBox("👤 Curandeiro", item.nome)}
+${infoBox("👤 Responsável", item.nome)}
 ${infoBox("🎖 Cargo", formatarCargo(item.cargo))}
 ${infoBox("⏱ Tempo Total", formatarTempo(item.total))}
 ${infoBox("🟢 Entrada", item.entrada)}
 ${infoBox("🔴 Saída", item.saida)}
 
+</div>
+
+<div style="
+margin-bottom:14px;
+">
+${infoBox("👥 Curandeiros no Expediente", formatarCurandeirosTexto(curandeiros))}
 </div>
 
 <div style="
@@ -916,6 +1135,11 @@ grid.appendChild(card);
 template.appendChild(pagina);
 }
 
+// Compatibilidade com nome antigo
+function criarPaginaPDF(template,item,prints,inicioIndex,totalPrints,numeroPagina){
+return criarPaginaRelatorio(template,item,prints,inicioIndex,totalPrints,numeroPagina);
+}
+
 function infoBox(titulo, valor){
 return `
 <div style="
@@ -1008,6 +1232,7 @@ lista.innerHTML = "";
 
 snapshot.forEach(doc=>{
 const item = doc.data();
+const curandeiros = obterCurandeirosDoRegistro(item);
 
 const card = document.createElement("div");
 
@@ -1015,6 +1240,7 @@ card.classList.add("realtime-card");
 
 card.innerHTML = `
 <h3>${item.nome}</h3>
+<p>👥 ${formatarCurandeirosTexto(curandeiros)}</p>
 <p>📅 ${item.data}</p>
 <p>⏱ ${item.total}</p>
 <p>${item.entrada} - ${item.saida}</p>
@@ -1031,8 +1257,10 @@ lista.appendChild(card);
 // =========================
 
 async function filtrarHistorico(){
-const data = document.getElementById("filtroHistorico").value;
+let data = document.getElementById("filtroHistorico").value;
 const lista = document.getElementById("historicoLista");
+
+data = converterDataInputParaBR(data);
 
 if(!data){
 alert("Selecione uma data");
@@ -1057,6 +1285,7 @@ return;
 
 snapshot.forEach(doc=>{
 const item = doc.data();
+const curandeiros = obterCurandeirosDoRegistro(item);
 
 const card = document.createElement("div");
 
@@ -1064,6 +1293,7 @@ card.classList.add("realtime-card");
 
 card.innerHTML = `
 <h3>${item.nome}</h3>
+<p>👥 Curandeiros: ${formatarCurandeirosTexto(curandeiros)}</p>
 <p>📅 ${item.data}</p>
 <p>🟢 Entrada: ${item.entrada}</p>
 <p>🔴 Saída: ${item.saida}</p>
@@ -1138,7 +1368,7 @@ card.classList.add("membro-card");
 card.innerHTML = `
 <h3>${membro.nome}</h3>
 <p>${formatarCargo(membro.cargo)}</p>
-<p>ID: ${membro.id}</p>
+<p>CitizenID: ${membro.id}</p>
 <p>Primeiro login: ${membro.primeiroLogin ? "Sim" : "Não"}</p>
 
 <p>
@@ -1226,7 +1456,7 @@ lista.appendChild(card);
 }
 
 // =========================
-// SELECT MEMBROS PDF
+// SELECT MEMBROS RELATÓRIO
 // =========================
 
 async function carregarSelectMembros(){
@@ -1256,12 +1486,14 @@ select.appendChild(option);
 });
 }
 
-async function limparRegistrosAntigos(){
+// =========================
+// LIMPEZA DE REGISTROS ANTIGOS
+// =========================
 
+async function limparRegistrosAntigos(){
 if(!usuarioEhAdmin()) return;
 
 try{
-
 const agora = Date.now();
 const quinzeDias = 15 * 24 * 60 * 60 * 1000;
 const limite = agora - quinzeDias;
@@ -1288,8 +1520,8 @@ console.log("Registros antigos apagados:", snapshot.size);
 }catch(error){
 console.error("Erro ao limpar registros antigos:", error);
 }
-
 }
+
 // =========================
 // AUTO LOGIN
 // =========================
